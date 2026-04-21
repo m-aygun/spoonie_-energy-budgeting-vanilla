@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pastel-pink: #FF1493;
+  --color-pastel-peach: #FF8C42;
+  --color-pastel-mint: #1ABC9C;
+  --color-pastel-green: #27AE60;
+  --color-pastel-lavender: #9B59B6;
+  
+  --color-primary: var(--color-pastel-mint);
+  --color-secondary: var(--color-pastel-lavender);
+  --color-accent: var(--color-pastel-pink);
+  --color-warning: var(--color-pastel-peach);
+  --color-success: var(--color-pastel-green);
+}

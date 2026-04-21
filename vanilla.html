@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spoonie - Energy Budgeting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Colors */
+        :root {
+            --primary: #1ABC9C;      /* turquoise */
+            --secondary: #9B59B6;    /* purple */
+            --accent: #FF1493;       /* pink */
+            --warning: #FF8C42;      /* orange */
+            --success: #27AE60;      /* green */
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 1.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #f5f5f5;
+        }
+
+        /* Main content */
+        main {
+            padding: 1.5rem;
+            padding-bottom: 2rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Greeting */
+        .greeting {
+            margin-bottom: 2rem;
+        }
+
+        .date {
+            font-size: 0.875rem;
+            color: #999;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .greeting h2 {
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        /* Spoon Card */
+        .spoon-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 24px;
+            padding: 1.5rem;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(26, 188, 156, 0.15);
+        }
+
+        .spoon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .spoon-info {
+            flex: 1;
+        }
+
+        .spoon-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .spoon-count {
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+
+        .spoon-count.low {
+            background: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 2rem;
+        }
+
+        .spoon-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-width: 120px;
+        }
+
+        .spoon-icon {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .modifier-buttons {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-top: 1rem;
+        }
+
+        .modifier-btn {
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modifier-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Activity List */
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        .activity-list {
+            space-y: 0.75rem;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            background: #fafafa;
+            border-color: #ddd;
+        }
+
+        .activity-item.completed {
+            opacity: 0.6;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .activity-item.completed .activity-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .activity-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .activity-icon {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            background: var(--primary);
+            color: white;
+        }
+
+        .activity-item.completed .activity-icon {
+            background: var(--success);
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-spoons {
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .activity-spoons.recovery {
+            color: var(--success);
+        }
+
+        .activity-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .icon-btn.delete:hover {
+            background: rgba(255, 20, 147, 0.1);
+        }
+
+        .icon-btn.edit:hover {
+            background: rgba(26, 188, 156, 0.1);
+        }
+
+        /* Suggested Activities */
+        .suggested-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .suggested-item {
+            background: #f9f9f9;
+            border: 1px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .suggested-item:hover {
+            background: #f0f0f0;
+            border-color: #ddd;
+            transform: translateY(-2px);
+        }
+
+        .suggested-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggested-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .suggested-spoons {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #15a089;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(26, 188, 156, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #2d3436;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 1.5rem;
+            width: 100%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        /* Numbers input */
+        .number-input-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .number-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .number-btn:hover {
+            background: #15a089;
+        }
+
+        .number-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .alert-warning {
+            background: rgba(255, 140, 66, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(255, 140, 66, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: #999;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .summary-stat {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <div class="logo-icon">⚡</div>
+                <h1>Spoonie</h1>
+            </div>
+            <div class="header-buttons">
+                <button onclick="app.goToScreen('history')">📊</button>
+                <button onclick="app.goToScreen('settings')">⚙️</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Main Screen -->
+            <div id="main-screen" class="screen active">
+                <div class="greeting">
+                    <div class="date" id="current-date"></div>
+                    <h2 id="greeting"></h2>
+                </div>
+
+                <div class="spoon-card">
+                    <div class="spoon-header">
+                        <div class="spoon-info">
+                            <div class="spoon-label">Today's Spoons</div>
+                            <div class="spoon-count" id="spoon-count">12 / 12</div>
+                        </div>
+                        <div class="spoon-icons" id="spoon-icons"></div>
+                    </div>
+                    <div class="modifier-buttons">
+                        <button class="modifier-btn" onclick="app.addModifier('Slept badly', -2)">🌙 Slept badly -2</button>
+                        <button class="modifier-btn" onclick="app.addModifier('Extra rest', 2)">☀️ +2 from yesterday</button>
+                    </div>
+                </div>
+
+                <!-- My Plan -->
+                <div id="plan-section" style="display: none; margin-bottom: 2rem;">
+                    <div class="section-title">
+                        <span>My Plan</span>
+                        <span class="activity-badge" id="planned-spoons">0</span>
+                    </div>
+                    <div class="activity-list" id="activity-plan"></div>
+                </div>
+
+                <!-- Suggested Activities -->
+                <div>
+                    <div class="section-title">
+                        <span>Suggested for today</span>
+                        <button onclick="app.showModal('custom-activity-modal')" style="border: none; background: none; color: var(--primary); cursor: pointer; font-size: 1.25rem;">➕</button>
+                    </div>
+                    <div class="tabs">
+                        <div class="tab active" onclick="app.switchTab('suggested')">Tasks</div>
+                        <div class="tab" onclick="app.switchTab('recovery')">Recovery</div>
+                    </div>
+                    <div class="suggested-grid" id="suggested-activities"></div>
+                    <div class="suggested-grid" id="recovery-activities" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Activity Screen -->
+            <div id="activity-screen" class="screen">
+                <button onclick="app.goToScreen('main')" style="margin-bottom: 1rem; background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0; display: flex; align-items: center; gap: 0.5rem;">← Back</button>
+                <h2>Add Activity</h2>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="activity-name">Activity Name</label>
+                    <input type="text" id="activity-name" placeholder="Enter activity name">
+                </div>
+                <div class="form-group">
+                    <label>Estimated Spoons</label>
+                    <div class="number-input-group">
+                        <button class="number-btn" onclick="app.decreaseEstimate()">−</button>
+                        <div class="number-display" id="estimate-display">2</div>
+                        <button class="number-btn" onclick="app.increaseEstimate()">+</button>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button class="btn btn-secondary" onclick="app.goToScreen('main')">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.confirmActivity()">Add to Plan</button>
+                </div>
+            </div>
+
+            <!-- Summary Screen -->
+            <div id="summary-screen" class="screen">
+                <button onclick="app.goToScreen('main')" style="margin-bottom: 1rem; background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0; display: flex; align-items: center; gap: 0.5rem;">← Back</button>
+                <h2>Day Summary</h2>
+                <div style="margin-top: 1.5rem;">
+                    <div class="summary-stat">
+                        <span class="summary-label">Total Spoons</span>
+                        <span class="summary-value" id="summary-total">12</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="summary-label">Used Spoons</span>
+                        <span class="summary-value" id="summary-used">0</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="summary-label">Remaining Spoons</span>
+                        <span class="summary-value" id="summary-remaining">12</span>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label for="reflection">How are you feeling?</label>
+                    <textarea id="reflection" placeholder="Write a reflection about your day..."></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button class="btn btn-secondary" onclick="app.goToScreen('main')">Back</button>
+                    <button class="btn btn-primary" onclick="app.completeDay()">Complete Day</button>
+                </div>
+            </div>
+
+            <!-- History Screen -->
+            <div id="history-screen" class="screen">
+                <button onclick="app.goToScreen('main')" style="margin-bottom: 1rem; background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0; display: flex; align-items: center; gap: 0.5rem;">← Back</button>
+                <h2>History</h2>
+                <div id="history-list" style="margin-top: 1.5rem;"></div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div id="settings-screen" class="screen">
+                <button onclick="app.goToScreen('main')" style="margin-bottom: 1rem; background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; padding: 0; display: flex; align-items: center; gap: 0.5rem;">← Back</button>
+                <h2>Settings</h2>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="user-name">Your Name</label>
+                    <input type="text" id="user-name" placeholder="Enter your name" onchange="app.saveSettings()">
+                </div>
+                <div class="form-buttons">
+                    <button class="btn btn-primary" onclick="app.goToScreen('main')">Back</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="custom-activity-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add Custom Activity</h2>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Category</label>
+                <select id="activity-category">
+                    <option value="suggested">Task</option>
+                    <option value="recovery">Recovery</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="custom-activity-name">Activity Name</label>
+                <input type="text" id="custom-activity-name" placeholder="Enter activity name">
+            </div>
+            <div class="form-group">
+                <label>Estimated Spoons</label>
+                <div class="number-input-group">
+                    <button class="number-btn" onclick="app.decreaseCustomEstimate()">−</button>
+                    <div class="number-display" id="custom-estimate-display">2</div>
+                    <button class="number-btn" onclick="app.increaseCustomEstimate()">+</button>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button class="btn btn-secondary" onclick="app.hideModal('custom-activity-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.confirmCustomActivity()">Add Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const INITIAL_SPOONS = 12;
+        const ICONS = {
+            'School/Work': '\u{1F4BC}',
+            'Social event': '\u{1F465}',
+            'Shower': '\u{1F6BF}',
+            'Transport': '\u{1F68C}',
+            'Chores': '\u{1F9F9}',
+            'Meeting': '\u{2615}',
+            'Doctor/Therapy': '\u{1F48A}',
+            'Cooking': '\u{1F373}',
+            'Relax/read': '\u{1F4D6}',
+            'Listen to music': '\u{1F3B5}',
+            'Nap': '\u{1F634}',
+            'Talk to friends': '\u{1F4AC}',
+            'Play games': '\u{1F3AE}',
+            'Watch TV': '\u{1F4FA}',
+        };
+
+        const SUGGESTED_ACTIVITIES = [
+            { name: 'School/Work', spoons: 4 },
+            { name: 'Social event', spoons: 3 },
+            { name: 'Shower', spoons: 2 },
+            { name: 'Transport', spoons: 2 },
+            { name: 'Chores', spoons: 2 },
+            { name: 'Meeting', spoons: 3 },
+            { name: 'Doctor/Therapy', spoons: 3 },
+            { name: 'Cooking', spoons: 2 },
+        ];
+
+        const RECOVERY_ACTIVITIES = [
+            { name: 'Relax/read', spoons: 1 },
+            { name: 'Listen to music', spoons: 1 },
+            { name: 'Nap', spoons: 2 },
+            { name: 'Talk to friends', spoons: 1 },
+            { name: 'Play games', spoons: 1 },
+            { name: 'Watch TV', spoons: 1 },
+        ];
+
+        const app = {
+            state: {
+                currentScreen: 'main',
+                currentTab: 'suggested',
+                userName: localStorage.getItem('spoonie_user_name') || '',
+                dayState: (() => {
+                    const saved = localStorage.getItem('spoonie_day_state');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.date === new Date().toISOString().split('T')[0]) {
+                            return parsed;
+                        }
+                    }
+                    return {
+                        date: new Date().toISOString().split('T')[0],
+                        activities: [],
+                        modifiers: [],
+                    };
+                })(),
+                history: JSON.parse(localStorage.getItem('spoonie_history') || '[]'),
+                customEstimate: 2,
+                activityEstimate: 2,
+            },
+
+            init() {
+                this.updateUI();
+                document.getElementById('user-name').value = this.state.userName;
+            },
+
+            updateUI() {
+                this.updateDate();
+                this.updateGreeting();
+                this.updateSpoons();
+                this.updateActivities();
+                this.updateSuggested();
+                this.saveState();
+            },
+
+            updateDate() {
+                const today = new Date();
+                const formatted = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                document.getElementById('current-date').textContent = formatted;
+            },
+
+            updateGreeting() {
+                const hour = new Date().getHours();
+                const name = this.state.userName || 'Friend';
+                let greeting = 'Hello';
+                if (hour >= 5 && hour < 12) greeting = 'Good morning';
+                else if (hour >= 18 || hour < 5) greeting = 'Good evening';
+                document.getElementById('greeting').textContent = `${greeting}, ${name}`;
+            },
+
+            getStats() {
+                const modifierSum = this.state.dayState.modifiers.reduce((sum, m) => sum + m.value, 0);
+                const totalSpoons = INITIAL_SPOONS + modifierSum;
+                
+                let usedSpoons = 0;
+                this.state.dayState.activities.forEach(act => {
+                    if (act.completed) {
+                        if (act.category === 'recovery') {
+                            usedSpoons -= act.spoons;
+                        } else {
+                            usedSpoons += act.spoons;
+                        }
+                    }
+                });
+
+                const remainingSpoons = totalSpoons - usedSpoons;
+                return { totalSpoons, usedSpoons, remainingSpoons };
+            },
+
+            updateSpoons() {
+                const stats = this.getStats();
+                document.getElementById('spoon-count').textContent = `${stats.remainingSpoons} / ${stats.totalSpoons}`;
+                
+                const spoonIconsContainer = document.getElementById('spoon-icons');
+                spoonIconsContainer.innerHTML = '';
+                for (let i = 0; i < Math.max(0, stats.remainingSpoons); i++) {
+                    const span = document.createElement('div');
+                    span.className = 'spoon-icon';
+                    span.textContent = '⚡';
+                    spoonIconsContainer.appendChild(span);
+                }
+            },
+
+            updateActivities() {
+                const planSection = document.getElementById('plan-section');
+                const activityPlan = document.getElementById('activity-plan');
+                
+                if (this.state.dayState.activities.length === 0) {
+                    planSection.style.display = 'none';
+                    activityPlan.innerHTML = '';
+                    return;
+                }
+
+                planSection.style.display = 'block';
+                
+                let totalPlanned = 0;
+                this.state.dayState.activities.forEach(act => {
+                    if (act.category === 'recovery') {
+                        totalPlanned -= act.spoons;
+                    } else {
+                        totalPlanned += act.spoons;
+                    }
+                });
+                document.getElementById('planned-spoons').textContent = totalPlanned;
+
+                activityPlan.innerHTML = this.state.dayState.activities.map(act => `
+                    <div class="activity-item ${act.completed ? 'completed' : ''}">
+                        <div class="activity-left">
+                            <input type="checkbox" onchange="app.toggleActivity('${act.id}')" ${act.completed ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <div class="activity-icon">${ICONS[act.name] || '✓'}</div>
+                            <div class="activity-details">
+                                <div class="activity-name">${act.name}</div>
+                                <div class="activity-spoons ${act.category === 'recovery' ? 'recovery' : ''}">
+                                    ${act.category === 'recovery' ? '+' : ''}${act.spoons} ⚡
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-actions">
+                            <button class="icon-btn delete" onclick="app.deleteActivity('${act.id}')" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            updateSuggested() {
+                const suggestedContainer = document.getElementById('suggested-activities');
+                const recoveryContainer = document.getElementById('recovery-activities');
+
+                suggestedContainer.innerHTML = SUGGESTED_ACTIVITIES.map(act => `
+                    <div class="suggested-item" onclick="app.addActivityToPlan('${act.name}', ${act.spoons}, 'suggested')">
+                        <div class="suggested-icon">${ICONS[act.name] || '✓'}</div>
+                        <div class="suggested-name">${act.name}</div>
+                        <div class="suggested-spoons">${act.spoons} spoons</div>
+                    </div>
+                `).join('');
+
+                recoveryContainer.innerHTML = RECOVERY_ACTIVITIES.map(act => `
+                    <div class="suggested-item" onclick="app.addActivityToPlan('${act.name}', ${act.spoons}, 'recovery')">
+                        <div class="suggested-icon">${ICONS[act.name] || '✓'}</div>
+                        <div class="suggested-name">${act.name}</div>
+                        <div class="suggested-spoons">+${act.spoons} spoons</div>
+                    </div>
+                `).join('');
+            },
+
+            addActivityToPlan(name, spoons, category) {
+                const id = Math.random().toString(36).substr(2, 9);
+                this.state.dayState.activities.push({
+                    id,
+                    name,
+                    spoons,
+                    category,
+                    completed: false,
+                });
+                this.updateUI();
+            },
+
+            toggleActivity(id) {
+                const activity = this.state.dayState.activities.find(a => a.id === id);
+                if (activity) {
+                    activity.completed = !activity.completed;
+                    this.updateUI();
+                }
+            },
+
+            deleteActivity(id) {
+                this.state.dayState.activities = this.state.dayState.activities.filter(a => a.id !== id);
+                this.updateUI();
+            },
+
+            addModifier(label, value) {
+                this.state.dayState.modifiers.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    label,
+                    value,
+                });
+                this.updateUI();
+            },
+
+            increaseEstimate() {
+                this.state.activityEstimate = Math.min(12, this.state.activityEstimate + 1);
+                document.getElementById('estimate-display').textContent = this.state.activityEstimate;
+            },
+
+            decreaseEstimate() {
+                this.state.activityEstimate = Math.max(0, this.state.activityEstimate - 1);
+                document.getElementById('estimate-display').textContent = this.state.activityEstimate;
+            },
+
+            increaseCustomEstimate() {
+                this.state.customEstimate = Math.min(12, this.state.customEstimate + 1);
+                document.getElementById('custom-estimate-display').textContent = this.state.customEstimate;
+            },
+
+            decreaseCustomEstimate() {
+                this.state.customEstimate = Math.max(0, this.state.customEstimate - 1);
+                document.getElementById('custom-estimate-display').textContent = this.state.customEstimate;
+            },
+
+            confirmActivity() {
+                const name = document.getElementById('activity-name').value.trim();
+                if (name) {
+                    this.addActivityToPlan(name, this.state.activityEstimate, 'suggested');
+                    document.getElementById('activity-name').value = '';
+                    this.state.activityEstimate = 2;
+                    document.getElementById('estimate-display').textContent = '2';
+                    this.goToScreen('main');
+                }
+            },
+
+            confirmCustomActivity() {
+                const name = document.getElementById('custom-activity-name').value.trim();
+                const category = document.getElementById('activity-category').value;
+                if (name) {
+                    this.addActivityToPlan(name, this.state.customEstimate, category);
+                    document.getElementById('custom-activity-name').value = '';
+                    this.state.customEstimate = 2;
+                    document.getElementById('custom-estimate-display').textContent = '2';
+                    this.hideModal('custom-activity-modal');
+                }
+            },
+
+            completeDay() {
+                const reflection = document.getElementById('reflection').value;
+                const stats = this.getStats();
+                const dayData = {
+                    date: this.state.dayState.date,
+                    activities: this.state.dayState.activities,
+                    modifiers: this.state.dayState.modifiers,
+                    reflection,
+                    totalSpoons: stats.totalSpoons,
+                    usedSpoons: stats.usedSpoons,
+                    remainingSpoons: stats.remainingSpoons,
+                };
+                
+                this.state.history.push(dayData);
+                localStorage.setItem('spoonie_history', JSON.stringify(this.state.history));
+                
+                // Reset for tomorrow
+                this.state.dayState = {
+                    date: new Date(new Date().getTime() + 86400000).toISOString().split('T')[0],
+                    activities: [],
+                    modifiers: [],
+                };
+                document.getElementById('reflection').value = '';
+                
+                this.goToScreen('main');
+                this.updateUI();
+            },
+
+            switchTab(tab) {
+                this.state.currentTab = tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                document.getElementById('suggested-activities').style.display = tab === 'suggested' ? 'grid' : 'none';
+                document.getElementById('recovery-activities').style.display = tab === 'recovery' ? 'grid' : 'none';
+            },
+
+            saveSettings() {
+                const name = document.getElementById('user-name').value;
+                this.state.userName = name;
+                localStorage.setItem('spoonie_user_name', name);
+                this.updateGreeting();
+            },
+
+            goToScreen(screen) {
+                this.state.currentScreen = screen;
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screen + '-screen').classList.add('active');
+                
+                if (screen === 'summary') {
+                    const stats = this.getStats();
+                    document.getElementById('summary-total').textContent = stats.totalSpoons;
+                    document.getElementById('summary-used').textContent = stats.usedSpoons;
+                    document.getElementById('summary-remaining').textContent = stats.remainingSpoons;
+                } else if (screen === 'history') {
+                    this.updateHistory();
+                }
+            },
+
+            updateHistory() {
+                const historyList = document.getElementById('history-list');
+                if (this.state.history.length === 0) {
+                    historyList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>No history yet</p></div>';
+                    return;
+                }
+                
+                historyList.innerHTML = this.state.history.reverse().map(day => `
+                    <div class="summary-stat">
+                        <div>
+                            <div class="summary-label">${day.date}</div>
+                            <div style="font-size: 0.85rem; color: #999;">${day.activities.length} activities</div>
+                        </div>
+                        <div class="summary-value">${day.remainingSpoons}/${day.totalSpoons}</div>
+                    </div>
+                `).join('');
+            },
+
+            showModal(modalId) {
+                document.getElementById(modalId).classList.add('active');
+            },
+
+            hideModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            },
+
+            saveState() {
+                localStorage.setItem('spoonie_day_state', JSON.stringify(this.state.dayState));
+            },
+        };
+
+        // Initialize app
+        app.init();
+    </script>
+</body>
+</html>
