@@ -68,6 +68,13 @@ const INITIAL_SPOONS = 12;
 
 const LOW_SPOON_THRESHOLD = 2;
 
+const ENERGY_LEVELS = [
+  { level: 1, title: 'Begynder', minXP: 0 },
+  { level: 2, title: 'Bevidst', minXP: 100 },
+  { level: 3, title: 'Balanceret', minXP: 250 },
+  { level: 4, title: 'Selvreguleret', minXP: 450 },
+] as const;
+
 const getDayRemainingSpoons = (day: DayState) => {
   if (typeof day.remainingSpoons === 'number') {
     return day.remainingSpoons;
@@ -214,6 +221,25 @@ export default function App() {
   const [showOnboardingModal, setShowOnboardingModal] = useState(!hasSeenOnboarding);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
+  const energyLevel = useMemo(() => {
+    return [...ENERGY_LEVELS]
+      .reverse()
+      .find(({ minXP }) => totalXP >= minXP) ?? ENERGY_LEVELS[0];
+  }, [totalXP]);
+
+  const nextEnergyLevel = useMemo(() => {
+    return ENERGY_LEVELS.find(({ level }) => level === energyLevel.level + 1) ?? null;
+  }, [energyLevel.level]);
+
+  const xpToNextLevel = nextEnergyLevel ? Math.max(0, nextEnergyLevel.minXP - totalXP) : 0;
+
+  const energyProgress = nextEnergyLevel
+    ? Math.min(
+        100,
+        Math.round(((totalXP - energyLevel.minXP) / (nextEnergyLevel.minXP - energyLevel.minXP)) * 100)
+      )
+    : 100;
+
   useEffect(() => {
     localStorage.setItem('spoon_user_name', userName);
   }, [userName]);
@@ -254,9 +280,9 @@ export default function App() {
         icon: <Coffee className="w-12 h-12" />,
       },
       {
-        title: 'Optjen XP ⭐',
-        subtitle: 'Mekanisme for læring og belønning',
-        description: 'Når du gennemfører aktiviteter, optjener du XP. Jo mere du bruger spoons på en aktivitet, jo mere XP får du. Det hjælper dig med at se dine præstationer vokse over tid.',
+        title: 'Udvikl din energi-kompetence ⭐',
+        subtitle: 'Små skridt, tydelig udvikling',
+        description: 'Når du gennemfører aktiviteter og passer på din energi, optjener du XP, som løfter dit niveau i energi-kompetence. Fokus er på personlig udvikling og bedre selvforståelse over tid.',
         icon: <TrendingUp className="w-12 h-12" />,
       },
       {
@@ -739,7 +765,7 @@ export default function App() {
               <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie</h1>
               <div className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
-                <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">{totalXP} XP</span>
+                <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Niveau {energyLevel.level}: {energyLevel.title}</span>
               </div>
             </div>
           </div>
@@ -1338,14 +1364,27 @@ export default function App() {
 
                 <div className="bg-gradient-to-r from-pastel-lavender to-pastel-mint p-6 rounded-3xl text-white shadow-xl shadow-pastel-lavender/20">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-lg">Experience Points</h3>
+                    <div>
+                      <h3 className="font-bold text-lg">Energi-kompetence</h3>
+                      <p className="text-xs font-semibold opacity-80">Niveau {energyLevel.level}: {energyLevel.title}</p>
+                    </div>
                     <TrendingUp className="w-5 h-5" />
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black">{totalXP}</span>
-                    <span className="text-sm font-semibold opacity-90">total XP</span>
+                    <span className="text-sm font-semibold opacity-90">XP samlet</span>
                   </div>
-                  <p className="text-xs opacity-75 mt-3">Earn XP by completing activities and managing your energy well.</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="h-2 rounded-full bg-white/25 overflow-hidden">
+                      <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${energyProgress}%` }} />
+                    </div>
+                    <p className="text-xs opacity-90">
+                      {nextEnergyLevel
+                        ? `${xpToNextLevel} XP til niveau ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
+                        : 'Du har nået højeste niveau i energi-kompetence.'}
+                    </p>
+                    <p className="text-xs opacity-75">XP markerer din udvikling i at forstå og regulere din energi, ikke et spilscore.</p>
+                  </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
