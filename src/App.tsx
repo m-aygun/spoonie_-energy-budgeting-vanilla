@@ -75,6 +75,46 @@ const ENERGY_LEVELS = [
   { level: 4, title: 'Selvreguleret', minXP: 450 },
 ] as const;
 
+const UI_THEMES = [
+  {
+    id: 'classic',
+    label: 'Classic Mint',
+    description: 'Din nuvaerende farvestil',
+    swatches: ['#1ABC9C', '#FF8C42', '#9B59B6', '#27AE60', '#FF1493'],
+  },
+  {
+    id: 'nordic',
+    label: 'Nordic Soft',
+    description: 'Koelige og rolige toner',
+    swatches: ['#7A9EA4', '#C7B9A0', '#DCD4B6', '#DF8A8B', '#8D7BA0'],
+  },
+  {
+    id: 'berry',
+    label: 'Berry Dusk',
+    description: 'Mauve og bordeaux nuancer',
+    swatches: ['#CBC7DF', '#A4AED2', '#B2889E', '#995F70', '#4E4D67'],
+  },
+  {
+    id: 'sage',
+    label: 'Sage Paper',
+    description: 'Blod pastel med lav kontrast',
+    swatches: ['#BCD0D0', '#EFD1D4', '#E8DDE1', '#C5C89F', '#9FB8AC'],
+  },
+  {
+    id: 'dark',
+    label: 'Dark Mode',
+    description: 'Mork baggrund med tydelig kontrast',
+    swatches: ['#0F172A', '#1E293B', '#334155', '#22D3EE', '#A78BFA'],
+  },
+] as const;
+
+const SpoonIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <ellipse cx="8" cy="7" rx="4.5" ry="5.5" />
+    <path d="M10.8 10.5c1.2-0.4 2.5 0.3 2.9 1.5l2.7 8.2a2 2 0 1 1-3.8 1.2L9.9 13.2a2.1 2.1 0 0 1 0.9-2.7z" />
+  </svg>
+);
+
 const AVATAR_FRAMES = [
   { id: 'mint', label: 'Mint', className: 'bg-pastel-mint text-white', unlockLevel: 1 },
   { id: 'sky', label: 'Sky', className: 'bg-sky-400 text-white', unlockLevel: 2 },
@@ -138,7 +178,7 @@ const getDayRemainingSpoons = (day: DayState) => {
 
 const moveItem = <T,>(items: T[], fromIndex: number, toIndex: number): T[] => {
   const next = [...items];
-  const [moved] = next.splice(fromIndex, 1);
+        icon: <SpoonIcon className="w-12 h-12" />,
   next.splice(toIndex, 0, moved);
   return next;
 };
@@ -235,6 +275,14 @@ export default function App() {
     const saved = localStorage.getItem('spoon_sick_mode');
     return saved === 'true';
   });
+  const [uiTheme, setUiTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('spoon_ui_theme');
+    if (savedTheme) {
+      return savedTheme;
+    }
+    const legacyDarkMode = localStorage.getItem('spoon_dark_mode');
+    return legacyDarkMode === 'true' ? 'berry' : 'classic';
+  });
 
   const [totalXP, setTotalXP] = useState(() => {
     const saved = localStorage.getItem('spoon_total_xp');
@@ -272,7 +320,8 @@ export default function App() {
     localStorage.setItem('spoon_break_reminder_threshold', breakReminderThreshold.toString());
     localStorage.setItem('spoon_work_from_home_mode', workFromHomeMode.toString());
     localStorage.setItem('spoon_sick_mode', sickMode.toString());
-  }, [breakReminderEnabled, breakReminderThreshold, workFromHomeMode, sickMode]);
+    localStorage.setItem('spoon_ui_theme', uiTheme);
+  }, [breakReminderEnabled, breakReminderThreshold, workFromHomeMode, sickMode, uiTheme]);
 
   useEffect(() => {
     localStorage.setItem('spoon_total_xp', totalXP.toString());
@@ -888,7 +937,7 @@ export default function App() {
                   className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm active:scale-95 transition-all ${isRecovery ? 'bg-pastel-green' : 'bg-pastel-mint'}`}
                   aria-label="Fjern en ske"
                 >
-                  <Zap className="w-4 h-4" />
+                  <SpoonIcon className="w-4 h-4" />
                 </button>
               ))}
             </div>
@@ -914,7 +963,7 @@ export default function App() {
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all"
                   aria-label="Tilfoej en ske"
                 >
-                  <Zap className="w-4 h-4" />
+                  <SpoonIcon className="w-4 h-4" />
                 </button>
               ))}
             </div>
@@ -985,9 +1034,11 @@ export default function App() {
     setReflection('');
   };
 
+  const activeTheme = UI_THEMES.find(theme => theme.id === uiTheme) ?? UI_THEMES[0];
+
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#2D3436] font-sans selection:bg-pastel-mint selection:text-white">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl relative overflow-hidden flex flex-col">
+    <div className={`theme-${activeTheme.id} min-h-screen font-sans selection:bg-pastel-mint selection:text-white bg-[#F8F9FA] text-[#2D3436]`}>
+      <div className="max-w-md mx-auto min-h-screen shadow-xl relative overflow-hidden flex flex-col bg-white">
         
         {/* Header */}
         <header className="px-6 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
@@ -1059,7 +1110,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-1 flex-wrap justify-end max-w-[120px]">
                       {Array.from({ length: Math.max(0, remainingSpoons) }).map((_, i) => (
-                        <Zap key={i} className="w-5 h-5 text-gray-800/80" />
+                        <SpoonIcon key={i} className="w-5 h-5 text-gray-800/80" />
                       ))}
                     </div>
                   </div>
@@ -1079,12 +1130,12 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="mt-4 bg-white/80 border border-gray-100 rounded-3xl p-4 shadow-sm">
+                  <div className="mt-4 rounded-3xl p-4 shadow-sm border bg-white/80 border-gray-100">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <Home className="w-5 h-5 text-pastel-blue" />
                         <div>
-                          <h4 className="font-bold">Work from Home Mode</h4>
+                          <h4 className="font-bold text-[#2D3436]">Work from Home Mode</h4>
                           <p className="text-xs text-gray-500">Halves planned spoon costs for uncompleted activities.</p>
                         </div>
                       </div>
@@ -1140,7 +1191,7 @@ export default function App() {
                                 <span className={`text-xs font-semibold ${act.category === 'recovery' ? 'text-pastel-green' : 'text-gray-400'}`}>
                                   {act.category === 'recovery' ? '+' : ''}{getDisplaySpoons(act)}
                                 </span>
-                                <Zap className={`w-3 h-3 ${act.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
+                                <SpoonIcon className={`w-3 h-3 ${act.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
                               </div>
                             </div>
                           </div>
@@ -1428,7 +1479,7 @@ export default function App() {
                             </span>
                             <div className="flex gap-1 mt-2">
                               {Array.from({ length: estimate }).map((_, i) => (
-                                <Zap key={i} className={`w-4 h-4 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
+                                <SpoonIcon key={i} className={`w-4 h-4 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
                               ))}
                             </div>
                           </div>
@@ -1521,7 +1572,7 @@ export default function App() {
                           </span>
                           <div className="flex gap-1 mt-2">
                             {Array.from({ length: estimate }).map((_, i) => (
-                              <Zap key={i} className={`w-4 h-4 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
+                              <SpoonIcon key={i} className={`w-4 h-4 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
                             ))}
                           </div>
                         </div>
@@ -1615,7 +1666,7 @@ export default function App() {
                   <div className="p-5 bg-white border border-gray-100 rounded-3xl shadow-sm flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-pastel-mint/30 rounded-2xl flex items-center justify-center text-pastel-mint">
-                        <Zap className="w-6 h-6" />
+                        <SpoonIcon className="w-6 h-6" />
                       </div>
                       <div>
                         <h4 className="font-bold">Consistency Bonus</h4>
@@ -1673,7 +1724,7 @@ export default function App() {
                     <span className="text-sm text-gray-600">Remaining spoons today</span>
                     <div className="flex items-center gap-1">
                       <span className="font-bold text-lg">{remainingSpoons}</span>
-                      <Zap className="w-4 h-4 text-pastel-mint" />
+                      <SpoonIcon className="w-4 h-4 text-pastel-mint" />
                     </div>
                   </div>
                 </div>
@@ -1700,6 +1751,50 @@ export default function App() {
 
                 <div className="space-y-6">
                   <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-gray-900">
+                        <Sun className="w-5 h-5 text-pastel-peach" />
+                        <h4 className="font-bold">Tema</h4>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Alle temaer er altid tilgaengelige, sa brugeren kan vaelge det mest behagelige.
+                    </p>
+                    <div className="space-y-2">
+                      {UI_THEMES.map(theme => {
+                        const active = theme.id === uiTheme;
+                        return (
+                          <button
+                            key={theme.id}
+                            onClick={() => setUiTheme(theme.id)}
+                            className={`w-full p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-mint bg-pastel-mint/10'
+                                : 'border-gray-200 bg-white hover:border-pastel-mint/60'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="text-sm font-bold text-gray-800">{theme.label}</p>
+                                <p className="text-xs text-gray-500">{theme.description}</p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {theme.swatches.map((swatch, idx) => (
+                                  <span
+                                    key={`${theme.id}-${idx}`}
+                                    className="w-4 h-4 rounded-full border border-white/50 shadow-sm"
+                                    style={{ backgroundColor: swatch }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
                     <div className="flex items-center gap-3 text-gray-900">
                       <User className="w-5 h-5 text-pastel-mint" />
                       <h4 className="font-bold">Your Name</h4>
@@ -1718,7 +1813,7 @@ export default function App() {
 
                   <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
                     <div className="flex items-center gap-3 text-gray-900">
-                      <Zap className="w-5 h-5 text-pastel-mint" />
+                      <SpoonIcon className="w-5 h-5 text-pastel-mint" />
                       <h4 className="font-bold">Daily Spoon Budget</h4>
                     </div>
                     <p className="text-sm text-gray-500 leading-relaxed">
@@ -2108,7 +2203,7 @@ export default function App() {
                     <p className="text-gray-500">Remaining spoons</p>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-5xl font-black">{remainingSpoons}</span>
-                      <Zap className="w-8 h-8 text-pastel-mint" />
+                      <SpoonIcon className="w-8 h-8 text-pastel-mint" />
                     </div>
                   </div>
 
@@ -2165,7 +2260,7 @@ export default function App() {
                           ? (history.reduce((acc, d) => acc + (d.remainingSpoons || 0), 0) / history.length).toFixed(1)
                           : '0'}
                       </span>
-                      <Zap className="w-4 h-4 text-pastel-mint" />
+                      <SpoonIcon className="w-4 h-4 text-pastel-mint" />
                     </div>
                   </div>
                   <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
@@ -2308,7 +2403,7 @@ export default function App() {
                             <span className={`text-xs font-bold ${day.remainingSpoons! < 0 ? 'text-pastel-pink' : 'text-pastel-mint'}`}>
                               {day.remainingSpoons}
                             </span>
-                            <Zap className={`w-3 h-3 ${day.remainingSpoons! < 0 ? 'text-pastel-pink' : 'text-pastel-mint'}`} />
+                            <SpoonIcon className={`w-3 h-3 ${day.remainingSpoons! < 0 ? 'text-pastel-pink' : 'text-pastel-mint'}`} />
                           </div>
                         </div>
                         <p className="text-sm text-gray-600 italic leading-relaxed">
@@ -2419,7 +2514,7 @@ export default function App() {
                       </span>
                       <div className="flex gap-0.5 mt-1">
                         {Array.from({ length: Math.min(estimate, 10) }).map((_, i) => (
-                          <Zap key={i} className={`w-3 h-3 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
+                          <SpoonIcon key={i} className={`w-3 h-3 ${currentActivity?.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
                         ))}
                       </div>
                     </div>
@@ -2515,7 +2610,7 @@ export default function App() {
                       </span>
                       <div className="flex gap-0.5 mt-1">
                         {Array.from({ length: Math.min(borrowAmount, 10) }).map((_, i) => (
-                          <Zap key={i} className="w-3 h-3 text-pastel-peach" />
+                          <SpoonIcon key={i} className="w-3 h-3 text-pastel-peach" />
                         ))}
                         {borrowAmount > 10 && <span className="text-[10px] font-bold text-pastel-peach">+</span>}
                       </div>
