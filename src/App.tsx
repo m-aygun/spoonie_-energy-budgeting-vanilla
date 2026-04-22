@@ -136,6 +136,13 @@ const getDayRemainingSpoons = (day: DayState) => {
   return dayTotal - dayUsed;
 };
 
+const moveItem = <T,>(items: T[], fromIndex: number, toIndex: number): T[] => {
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+};
+
 const SUGGESTED_ACTIVITIES: Partial<Activity>[] = [
   { name: 'School/Work', category: 'suggested' },
   { name: 'Social event', category: 'suggested' },
@@ -284,6 +291,8 @@ export default function App() {
   const [recoveryActivities, setRecoveryActivities] = useState<Partial<Activity>[]>(RECOVERY_ACTIVITIES);
   const [editingTemplate, setEditingTemplate] = useState<{ index: number, category: 'suggested' | 'recovery' } | null>(null);
   const [dragSource, setDragSource] = useState<'available' | 'selected' | null>(null);
+  const [draggedPlanActivityId, setDraggedPlanActivityId] = useState<string | null>(null);
+  const [draggedTemplate, setDraggedTemplate] = useState<{ category: 'suggested' | 'recovery'; index: number } | null>(null);
   const [showBorrowWarning, setShowBorrowWarning] = useState(false);
   const [hasEstimated, setHasEstimated] = useState(false);
   const [isLearningModalOpen, setIsLearningModalOpen] = useState(false);
@@ -794,6 +803,38 @@ export default function App() {
     }));
   };
 
+  const handleReorderPlanActivities = (targetId: string) => {
+    if (!draggedPlanActivityId || draggedPlanActivityId === targetId) return;
+
+    setDayState(prev => {
+      const fromIndex = prev.activities.findIndex(a => a.id === draggedPlanActivityId);
+      const toIndex = prev.activities.findIndex(a => a.id === targetId);
+
+      if (fromIndex === -1 || toIndex === -1) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        activities: moveItem(prev.activities, fromIndex, toIndex),
+      };
+    });
+
+    setDraggedPlanActivityId(null);
+  };
+
+  const handleReorderTemplates = (category: 'suggested' | 'recovery', targetIndex: number) => {
+    if (!draggedTemplate || draggedTemplate.category !== category || draggedTemplate.index === targetIndex) return;
+
+    if (category === 'suggested') {
+      setSuggestedActivities(prev => moveItem(prev, draggedTemplate.index, targetIndex));
+    } else {
+      setRecoveryActivities(prev => moveItem(prev, draggedTemplate.index, targetIndex));
+    }
+
+    setDraggedTemplate(null);
+  };
+
   const moveOneSpoonToSelected = () => {
     setEstimate(prev => Math.min(maxInteractiveEstimate, prev + 1));
   };
@@ -1073,10 +1114,16 @@ export default function App() {
                         {dayState.activities.filter(a => a.completed).length}/{dayState.activities.length} Done
                       </span>
                     </div>
+                    <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag aktiviteter for at aendre raekkefolgen.</p>
                     <div className="space-y-3">
                       {dayState.activities.map((act) => (
                         <div
                           key={act.id}
+                          draggable
+                          onDragStart={() => setDraggedPlanActivityId(act.id)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={() => handleReorderPlanActivities(act.id)}
+                          onDragEnd={() => setDraggedPlanActivityId(null)}
                           className={`relative group flex items-center justify-between p-4 bg-white border rounded-2xl transition-all shadow-sm ${
                             act.completed ? 'border-pastel-green/50 bg-pastel-green/10 opacity-60' : 'border-gray-100'
                           }`}
@@ -1098,6 +1145,16 @@ export default function App() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
+                            <div className="p-1 text-gray-300 cursor-grab active:cursor-grabbing" title="Drag for at flytte">
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <circle cx="9" cy="6" r="1.2" />
+                                <circle cx="15" cy="6" r="1.2" />
+                                <circle cx="9" cy="12" r="1.2" />
+                                <circle cx="15" cy="12" r="1.2" />
+                                <circle cx="9" cy="18" r="1.2" />
+                                <circle cx="15" cy="18" r="1.2" />
+                              </svg>
+                            </div>
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => handleEditPlanActivity(act)}
@@ -1138,9 +1195,18 @@ export default function App() {
                       <Plus className="w-4 h-4" /> Add activity
                     </button>
                   </div>
+                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
                   <div className="grid grid-cols-2 gap-3">
                     {suggestedActivities.map((act, i) => (
-                      <div key={i} className="relative group">
+                      <div
+                        key={i}
+                        draggable
+                        onDragStart={() => setDraggedTemplate({ category: 'suggested', index: i })}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleReorderTemplates('suggested', i)}
+                        onDragEnd={() => setDraggedTemplate(null)}
+                        className="relative group"
+                      >
                         <button
                           onClick={() => handleStartActivity(act)}
                           className="w-full flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-2xl hover:border-pastel-mint/50 hover:bg-pastel-mint/10 transition-all text-left shadow-sm"
@@ -1191,9 +1257,18 @@ export default function App() {
                       <Plus className="w-4 h-4" /> Add
                     </button>
                   </div>
+                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
                   <div className="space-y-3">
                     {recoveryActivities.map((act, i) => (
-                      <div key={i} className="relative group">
+                      <div
+                        key={i}
+                        draggable
+                        onDragStart={() => setDraggedTemplate({ category: 'recovery', index: i })}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleReorderTemplates('recovery', i)}
+                        onDragEnd={() => setDraggedTemplate(null)}
+                        className="relative group"
+                      >
                         <button
                           onClick={() => handleStartActivity(act)}
                           className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-pastel-green/50 hover:bg-pastel-green/10 transition-all shadow-sm"
