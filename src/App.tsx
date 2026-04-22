@@ -75,6 +75,48 @@ const ENERGY_LEVELS = [
   { level: 4, title: 'Selvreguleret', minXP: 450 },
 ] as const;
 
+const AVATAR_FRAMES = [
+  { id: 'mint', label: 'Mint', className: 'bg-pastel-mint text-white', unlockLevel: 1 },
+  { id: 'sky', label: 'Sky', className: 'bg-sky-400 text-white', unlockLevel: 2 },
+  { id: 'rose', label: 'Rose', className: 'bg-rose-400 text-white', unlockLevel: 3 },
+  { id: 'amber', label: 'Amber', className: 'bg-amber-400 text-white', unlockLevel: 4 },
+] as const;
+
+const AVATAR_SKINS = [
+  { id: 'light', label: 'Lys', className: 'bg-[#F6D2B4]', unlockLevel: 1 },
+  { id: 'tan', label: 'Solbrun', className: 'bg-[#DEB08A]', unlockLevel: 1 },
+  { id: 'brown', label: 'Brun', className: 'bg-[#B97C56]', unlockLevel: 2 },
+  { id: 'deep', label: 'Mork', className: 'bg-[#7A4D34]', unlockLevel: 3 },
+] as const;
+
+const AVATAR_HAIRS = [
+  { id: 'short', label: 'Kort', colorClass: 'bg-neutral-800', unlockLevel: 1 },
+  { id: 'curly', label: 'Krollet', colorClass: 'bg-amber-900', unlockLevel: 2 },
+  { id: 'bob', label: 'Bob', colorClass: 'bg-orange-950', unlockLevel: 2 },
+  { id: 'bun', label: 'Knold', colorClass: 'bg-neutral-900', unlockLevel: 3 },
+] as const;
+
+const AVATAR_TOPS = [
+  { id: 'hoodie', label: 'Hoodie', className: 'bg-emerald-400', unlockLevel: 1 },
+  { id: 'tee', label: 'T-shirt', className: 'bg-sky-400', unlockLevel: 1 },
+  { id: 'jacket', label: 'Jakke', className: 'bg-indigo-500', unlockLevel: 2 },
+  { id: 'knit', label: 'Strik', className: 'bg-rose-400', unlockLevel: 3 },
+] as const;
+
+const AVATAR_BOTTOMS = [
+  { id: 'jeans', label: 'Jeans', className: 'bg-blue-700', unlockLevel: 1 },
+  { id: 'joggers', label: 'Joggers', className: 'bg-slate-700', unlockLevel: 1 },
+  { id: 'cargo', label: 'Cargo', className: 'bg-emerald-700', unlockLevel: 2 },
+  { id: 'smart', label: 'Smart', className: 'bg-violet-700', unlockLevel: 3 },
+] as const;
+
+const AVATAR_ACCESSORIES = [
+  { id: 'none', label: 'Ingen', emoji: '', unlockLevel: 1 },
+  { id: 'glasses', label: 'Briller', emoji: '🕶️', unlockLevel: 2 },
+  { id: 'cap', label: 'Kasket', emoji: '🧢', unlockLevel: 2 },
+  { id: 'sparkle', label: 'Stjerne', emoji: '✨', unlockLevel: 4 },
+] as const;
+
 const getDayRemainingSpoons = (day: DayState) => {
   if (typeof day.remainingSpoons === 'number') {
     return day.remainingSpoons;
@@ -132,7 +174,7 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function App() {
-  const [screen, setScreen] = useState<'main' | 'activity' | 'summary' | 'quests' | 'custom-activity' | 'settings' | 'edit-activity' | 'history'>('main');
+  const [screen, setScreen] = useState<'main' | 'activity' | 'summary' | 'quests' | 'custom-activity' | 'settings' | 'avatar' | 'edit-activity' | 'history'>('main');
   const [currentActivity, setCurrentActivity] = useState<Partial<Activity> | null>(null);
   const [customName, setCustomName] = useState('');
   const [customCategory, setCustomCategory] = useState<'suggested' | 'recovery'>('suggested');
@@ -182,10 +224,32 @@ export default function App() {
     const saved = localStorage.getItem('spoon_work_from_home_mode');
     return saved === 'true';
   });
+  const [sickMode, setSickMode] = useState(() => {
+    const saved = localStorage.getItem('spoon_sick_mode');
+    return saved === 'true';
+  });
 
   const [totalXP, setTotalXP] = useState(() => {
     const saved = localStorage.getItem('spoon_total_xp');
     return saved ? parseInt(saved, 10) : 0;
+  });
+  const [avatarFrameId, setAvatarFrameId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_frame') || 'mint';
+  });
+  const [avatarSkinId, setAvatarSkinId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_skin') || 'light';
+  });
+  const [avatarHairId, setAvatarHairId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_hair') || 'short';
+  });
+  const [avatarTopId, setAvatarTopId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_top') || 'hoodie';
+  });
+  const [avatarBottomId, setAvatarBottomId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_bottom') || 'jeans';
+  });
+  const [avatarAccessoryId, setAvatarAccessoryId] = useState(() => {
+    return localStorage.getItem('spoon_avatar_accessory') || 'none';
   });
 
   useEffect(() => {
@@ -200,11 +264,21 @@ export default function App() {
     localStorage.setItem('spoon_break_reminder_enabled', breakReminderEnabled.toString());
     localStorage.setItem('spoon_break_reminder_threshold', breakReminderThreshold.toString());
     localStorage.setItem('spoon_work_from_home_mode', workFromHomeMode.toString());
-  }, [breakReminderEnabled, breakReminderThreshold, workFromHomeMode]);
+    localStorage.setItem('spoon_sick_mode', sickMode.toString());
+  }, [breakReminderEnabled, breakReminderThreshold, workFromHomeMode, sickMode]);
 
   useEffect(() => {
     localStorage.setItem('spoon_total_xp', totalXP.toString());
   }, [totalXP]);
+
+  useEffect(() => {
+    localStorage.setItem('spoon_avatar_frame', avatarFrameId);
+    localStorage.setItem('spoon_avatar_skin', avatarSkinId);
+    localStorage.setItem('spoon_avatar_hair', avatarHairId);
+    localStorage.setItem('spoon_avatar_top', avatarTopId);
+    localStorage.setItem('spoon_avatar_bottom', avatarBottomId);
+    localStorage.setItem('spoon_avatar_accessory', avatarAccessoryId);
+  }, [avatarFrameId, avatarSkinId, avatarHairId, avatarTopId, avatarBottomId, avatarAccessoryId]);
 
   const [suggestedActivities, setSuggestedActivities] = useState<Partial<Activity>[]>(SUGGESTED_ACTIVITIES);
   const [recoveryActivities, setRecoveryActivities] = useState<Partial<Activity>[]>(RECOVERY_ACTIVITIES);
@@ -239,6 +313,114 @@ export default function App() {
         Math.round(((totalXP - energyLevel.minXP) / (nextEnergyLevel.minXP - energyLevel.minXP)) * 100)
       )
     : 100;
+
+  const unlockedAvatarFrames = useMemo(() => {
+    return AVATAR_FRAMES.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const unlockedAvatarSkins = useMemo(() => {
+    return AVATAR_SKINS.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const unlockedAvatarHairs = useMemo(() => {
+    return AVATAR_HAIRS.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const unlockedAvatarTops = useMemo(() => {
+    return AVATAR_TOPS.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const unlockedAvatarBottoms = useMemo(() => {
+    return AVATAR_BOTTOMS.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const unlockedAvatarAccessories = useMemo(() => {
+    return AVATAR_ACCESSORIES.filter(option => option.unlockLevel <= energyLevel.level);
+  }, [energyLevel.level]);
+
+  const selectedAvatarFrame = AVATAR_FRAMES.find(option => option.id === avatarFrameId) ?? AVATAR_FRAMES[0];
+  const selectedAvatarSkin = AVATAR_SKINS.find(option => option.id === avatarSkinId) ?? AVATAR_SKINS[0];
+  const selectedAvatarHair = AVATAR_HAIRS.find(option => option.id === avatarHairId) ?? AVATAR_HAIRS[0];
+  const selectedAvatarTop = AVATAR_TOPS.find(option => option.id === avatarTopId) ?? AVATAR_TOPS[0];
+  const selectedAvatarBottom = AVATAR_BOTTOMS.find(option => option.id === avatarBottomId) ?? AVATAR_BOTTOMS[0];
+  const selectedAvatarAccessory = AVATAR_ACCESSORIES.find(option => option.id === avatarAccessoryId) ?? AVATAR_ACCESSORIES[0];
+
+  const renderFullBodyAvatar = (size: 'small' | 'large' = 'small') => {
+    const isLarge = size === 'large';
+    const frameSize = isLarge ? 'w-14 h-20 rounded-2xl' : 'w-10 h-12 rounded-xl';
+    const headSize = isLarge ? 'w-8 h-8' : 'w-6 h-6';
+    const torso = isLarge ? 'w-6 h-6' : 'w-4 h-4';
+    const legs = isLarge ? 'w-2 h-5' : 'w-1.5 h-3';
+    const armHeight = isLarge ? 'h-5' : 'h-3';
+    const accessorySize = isLarge ? 'text-sm' : 'text-[10px]';
+    const hairTop = isLarge ? '-top-1' : '-top-0.5';
+
+    const hairShape = (() => {
+      switch (selectedAvatarHair.id) {
+        case 'curly':
+          return 'rounded-full';
+        case 'bob':
+          return 'rounded-t-2xl rounded-b-sm';
+        case 'bun':
+          return 'rounded-t-full';
+        default:
+          return 'rounded-t-full rounded-b-sm';
+      }
+    })();
+
+    return (
+      <div className={`${frameSize} ${selectedAvatarFrame.className} relative flex items-end justify-center overflow-hidden`}>
+        <div className="absolute inset-0 bg-white/10" />
+        <div className={`absolute top-1 left-1/2 -translate-x-1/2 rounded-full shadow-sm ${selectedAvatarSkin.className} ${headSize}`}>
+          <div className={`absolute ${hairTop} left-1/2 -translate-x-1/2 ${headSize} ${selectedAvatarHair.colorClass} ${hairShape}`} />
+          {selectedAvatarAccessory.id !== 'none' && (
+            <span className={`absolute -top-1 right-0 ${accessorySize}`} role="img" aria-label={`Accessory: ${selectedAvatarAccessory.label}`}>
+              {selectedAvatarAccessory.emoji}
+            </span>
+          )}
+        </div>
+        <div className={`absolute top-[42%] left-1/2 -translate-x-1/2 rounded-t-md ${selectedAvatarTop.className} ${torso}`} />
+        <div className={`absolute top-[45%] left-[28%] w-1 ${armHeight} rounded-full ${selectedAvatarSkin.className} rotate-12`} />
+        <div className={`absolute top-[45%] right-[28%] w-1 ${armHeight} rounded-full ${selectedAvatarSkin.className} -rotate-12`} />
+        <div className={`absolute bottom-1 left-[42%] rounded-full ${selectedAvatarBottom.className} ${legs}`} />
+        <div className={`absolute bottom-1 right-[42%] rounded-full ${selectedAvatarBottom.className} ${legs}`} />
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (!unlockedAvatarFrames.some(option => option.id === avatarFrameId)) {
+      setAvatarFrameId(unlockedAvatarFrames[0].id);
+    }
+    if (!unlockedAvatarSkins.some(option => option.id === avatarSkinId)) {
+      setAvatarSkinId(unlockedAvatarSkins[0].id);
+    }
+    if (!unlockedAvatarHairs.some(option => option.id === avatarHairId)) {
+      setAvatarHairId(unlockedAvatarHairs[0].id);
+    }
+    if (!unlockedAvatarTops.some(option => option.id === avatarTopId)) {
+      setAvatarTopId(unlockedAvatarTops[0].id);
+    }
+    if (!unlockedAvatarBottoms.some(option => option.id === avatarBottomId)) {
+      setAvatarBottomId(unlockedAvatarBottoms[0].id);
+    }
+    if (!unlockedAvatarAccessories.some(option => option.id === avatarAccessoryId)) {
+      setAvatarAccessoryId(unlockedAvatarAccessories[0].id);
+    }
+  }, [
+    avatarFrameId,
+    avatarSkinId,
+    avatarHairId,
+    avatarTopId,
+    avatarBottomId,
+    avatarAccessoryId,
+    unlockedAvatarFrames,
+    unlockedAvatarSkins,
+    unlockedAvatarHairs,
+    unlockedAvatarTops,
+    unlockedAvatarBottoms,
+    unlockedAvatarAccessories,
+  ]);
 
   useEffect(() => {
     localStorage.setItem('spoon_user_name', userName);
@@ -368,9 +550,11 @@ export default function App() {
         if (a.category === 'recovery') {
           return acc - (a.estimatedSpoons || 0);
         }
-        return acc + (a.estimatedSpoons || 0);
+        const baseCost = a.estimatedSpoons || 0;
+        const effectiveCost = sickMode ? baseCost * 2 : baseCost;
+        return acc + effectiveCost;
       }, 0);
-  }, [dayState.activities]);
+  }, [dayState.activities, sickMode]);
 
   const remainingSpoons = totalSpoons - usedSpoons;
 
@@ -413,11 +597,20 @@ export default function App() {
       if (a.category === 'recovery') {
         return acc - spoons;
       }
+      const sickModeCost = sickMode ? spoons * 2 : spoons;
       // In work from home mode, halve the cost for uncompleted activities
-      const cost = workFromHomeMode && !a.completed ? spoons / 2 : spoons;
+      const cost = workFromHomeMode && !a.completed ? sickModeCost / 2 : sickModeCost;
       return acc + cost;
     }, 0);
-  }, [dayState.activities, workFromHomeMode]);
+  }, [dayState.activities, workFromHomeMode, sickMode]);
+
+  const getDisplaySpoons = (activity: Partial<Activity>) => {
+    const spoons = activity.estimatedSpoons || 0;
+    if (activity.category === 'recovery') {
+      return spoons;
+    }
+    return sickMode ? spoons * 2 : spoons;
+  };
 
   useEffect(() => {
     if (!breakReminderEnabled) return;
@@ -758,9 +951,7 @@ export default function App() {
         {/* Header */}
         <header className="px-6 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-pastel-mint rounded-xl flex items-center justify-center text-white shadow-lg shadow-pastel-mint/20">
-              <Zap className="w-6 h-6" />
-            </div>
+            {renderFullBodyAvatar('small')}
             <div>
               <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie</h1>
               <div className="flex items-center gap-1">
@@ -797,6 +988,20 @@ export default function App() {
                   <p className="text-gray-400 text-sm font-medium uppercase tracking-widest">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                   <h2 className="text-3xl font-black text-[#2D3436]">{getGreeting()}</h2>
                 </div>
+
+                <button
+                  onClick={() => setScreen('avatar')}
+                  className="w-full bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:border-pastel-lavender/50 hover:bg-pastel-lavender/5 transition-all flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    {renderFullBodyAvatar('small')}
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-gray-800">Avatar Studio</p>
+                      <p className="text-xs text-gray-500">Aendre din avatar direkte herfra</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300" />
+                </button>
 
                 {/* Spoon Indicator */}
                 <section className="bg-gradient-to-br from-pastel-mint to-pastel-lavender rounded-3xl p-6 text-gray-800 shadow-xl shadow-pastel-mint/10">
@@ -886,7 +1091,7 @@ export default function App() {
                               </span>
                               <div className="flex items-center gap-1">
                                 <span className={`text-xs font-semibold ${act.category === 'recovery' ? 'text-pastel-green' : 'text-gray-400'}`}>
-                                  {act.category === 'recovery' ? '+' : ''}{act.estimatedSpoons}
+                                  {act.category === 'recovery' ? '+' : ''}{getDisplaySpoons(act)}
                                 </span>
                                 <Zap className={`w-3 h-3 ${act.category === 'recovery' ? 'text-pastel-green' : 'text-pastel-mint'}`} />
                               </div>
@@ -946,7 +1151,7 @@ export default function App() {
                           <div className="flex flex-col">
                             <span className="font-medium text-sm line-clamp-1">{act.name}</span>
                             {act.estimatedSpoons && (
-                              <span className="text-[10px] text-gray-400 font-bold">{act.estimatedSpoons} Spoons</span>
+                              <span className="text-[10px] text-gray-400 font-bold">{getDisplaySpoons(act)} Spoons</span>
                             )}
                           </div>
                         </button>
@@ -1000,7 +1205,7 @@ export default function App() {
                             <div className="flex flex-col">
                               <span className="font-medium">{act.name}</span>
                               {act.estimatedSpoons && (
-                                <span className="text-[10px] text-gray-400 font-bold">+{act.estimatedSpoons} Spoons</span>
+                                <span className="text-[10px] text-gray-400 font-bold">+{getDisplaySpoons(act)} Spoons</span>
                               )}
                             </div>
                           </div>
@@ -1503,6 +1708,24 @@ export default function App() {
                   <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 text-gray-900">
+                        <AlertCircle className="w-5 h-5 text-pastel-pink" />
+                        <h4 className="font-bold">Sick Mode</h4>
+                      </div>
+                      <button
+                        onClick={() => setSickMode(!sickMode)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${sickMode ? 'bg-pastel-pink' : 'bg-gray-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${sickMode ? 'left-7' : 'left-1'}`} />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Når Sick Mode er aktiv, koster alle energi-krævende aktiviteter dobbelt antal spoons.
+                    </p>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-gray-900">
                         <Zap className="w-5 h-5 text-pastel-lavender" />
                         <h4 className="font-bold">Quick Add</h4>
                       </div>
@@ -1573,6 +1796,220 @@ export default function App() {
                 >
                   Save & Return
                 </button>
+              </motion.div>
+            )}
+
+            {screen === 'avatar' && (
+              <motion.div
+                key="avatar"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                className="space-y-8 py-4"
+              >
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setScreen('main')} className="p-2 hover:bg-gray-100 rounded-full">
+                    <ArrowRight className="w-6 h-6 rotate-180" />
+                  </button>
+                  <div className="flex-1 text-center pr-10">
+                    <h2 className="text-sm font-bold text-pastel-lavender uppercase tracking-widest">Customization</h2>
+                    <h3 className="text-3xl font-black">Avatar</h3>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-5">
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Dress up din avatar med hud, har, toj og accessories. Flere dele lases op, nar dit energi-kompetence niveau stiger.
+                  </p>
+
+                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                    {renderFullBodyAvatar('large')}
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">Din avatar</p>
+                      <p className="text-xs text-gray-500">Niveau {energyLevel.level}: {energyLevel.title}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hudtone</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_SKINS.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarSkinId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarSkinId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-lavender bg-pastel-lavender/10'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-lavender/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full ${option.className}`} />
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Har</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_HAIRS.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarHairId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarHairId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-peach bg-pastel-peach/20'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-peach/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-4 rounded-t-full ${option.colorClass}`} />
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Overdel</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_TOPS.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarTopId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarTopId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-mint bg-pastel-mint/15'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-mint/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded ${option.className}`} />
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Underdel</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_BOTTOMS.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarBottomId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarBottomId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-blue bg-pastel-blue/15'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-blue/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded ${option.className}`} />
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Accessory</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_ACCESSORIES.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarAccessoryId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarAccessoryId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-lavender bg-pastel-lavender/10'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-lavender/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-base" role="img" aria-hidden="true">{option.emoji || '○'}</span>
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Baggrund</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {AVATAR_FRAMES.map(option => {
+                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const active = option.id === avatarFrameId;
+                        return (
+                          <button
+                            key={option.id}
+                            disabled={!unlocked}
+                            onClick={() => unlocked && setAvatarFrameId(option.id)}
+                            className={`p-3 rounded-xl border text-left transition-all ${
+                              active
+                                ? 'border-pastel-mint bg-pastel-mint/10'
+                                : 'border-gray-200 bg-white'
+                            } ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-pastel-mint/60'}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full ${option.className}`} />
+                              <span className="text-sm font-semibold text-gray-800">{option.label}</span>
+                            </div>
+                            {!unlocked && (
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
 
