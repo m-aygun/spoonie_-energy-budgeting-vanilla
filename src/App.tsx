@@ -12,7 +12,7 @@ import {
   AlertCircle, 
   ArrowRight, 
   History, 
-  Trophy, 
+  Gift,
   Settings, 
   ChevronRight,
   Info,
@@ -1057,7 +1057,7 @@ export default function App() {
               <History className="w-6 h-6 text-gray-400" />
             </button>
             <button onClick={() => setScreen('quests')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Trophy className="w-6 h-6 text-pastel-peach" />
+              <Gift className="w-6 h-6 text-pastel-peach" />
             </button>
             <button onClick={() => setScreen('settings')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <Settings className="w-6 h-6 text-gray-400" />
