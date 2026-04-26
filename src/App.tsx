@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Zap, 
   Plus, 
@@ -36,7 +36,8 @@ import {
   Clock,
   Timer,
   Home,
-  TrendingUp
+  TrendingUp,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -63,6 +64,9 @@ import {
   subMonths
 } from 'date-fns';
 import { Activity, Modifier, Quest, DayState } from './types';
+import { ActivitySuggestion, getActivities, getAutocompleteDebugInfo, getSuggestionFromFirestore, searchActivitySuggestions } from './firebaseClient';
+import { analyzePatterns } from './aiInsights';
+import { fallbackRecoverySuggestionsFromInput, suggestRecoveryFromInput } from './aiRecovery';
 
 const INITIAL_SPOONS = 12;
 
@@ -108,7 +112,7 @@ const UI_THEMES = [
   },
 ] as const;
 
-const SpoonIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+const SpoonIcon = ({ className = 'w-4 h-4' }: { className?: string; key?: React.Key }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
     <ellipse cx="8" cy="7" rx="4.5" ry="5.5" />
     <path d="M10.8 10.5c1.2-0.4 2.5 0.3 2.9 1.5l2.7 8.2a2 2 0 1 1-3.8 1.2L9.9 13.2a2.1 2.1 0 0 1 0.9-2.7z" />
@@ -178,7 +182,7 @@ const getDayRemainingSpoons = (day: DayState) => {
 
 const moveItem = <T,>(items: T[], fromIndex: number, toIndex: number): T[] => {
   const next = [...items];
-        icon: <SpoonIcon className="w-12 h-12" />,
+  const [moved] = next.splice(fromIndex, 1);
   next.splice(toIndex, 0, moved);
   return next;
 };
@@ -221,6 +225,8 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function App() {
+  const hasLoadedActivitiesForDebug = useRef(false);
+  const xpToastTimeoutRef = useRef<number | null>(null);
   const [screen, setScreen] = useState<'main' | 'activity' | 'summary' | 'quests' | 'custom-activity' | 'settings' | 'avatar' | 'edit-activity' | 'history'>('main');
   const [currentActivity, setCurrentActivity] = useState<Partial<Activity> | null>(null);
   const [customName, setCustomName] = useState('');
@@ -288,6 +294,8 @@ export default function App() {
     const saved = localStorage.getItem('spoon_total_xp');
     return saved ? parseInt(saved, 10) : 0;
   });
+  const [showXpLevelsModal, setShowXpLevelsModal] = useState(false);
+  const [xpToast, setXpToast] = useState<{ amount: number; reason: string } | null>(null);
   const [avatarFrameId, setAvatarFrameId] = useState(() => {
     return localStorage.getItem('spoon_avatar_frame') || 'mint';
   });
@@ -328,6 +336,14 @@ export default function App() {
   }, [totalXP]);
 
   useEffect(() => {
+    return () => {
+      if (xpToastTimeoutRef.current !== null) {
+        window.clearTimeout(xpToastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('spoon_avatar_frame', avatarFrameId);
     localStorage.setItem('spoon_avatar_skin', avatarSkinId);
     localStorage.setItem('spoon_avatar_hair', avatarHairId);
@@ -335,6 +351,11 @@ export default function App() {
     localStorage.setItem('spoon_avatar_bottom', avatarBottomId);
     localStorage.setItem('spoon_avatar_accessory', avatarAccessoryId);
   }, [avatarFrameId, avatarSkinId, avatarHairId, avatarTopId, avatarBottomId, avatarAccessoryId]);
+
+  useEffect(() => {
+    // Keep ref usage intact while avoiding noisy debug fetches in dev.
+    hasLoadedActivitiesForDebug.current = true;
+  }, []);
 
   const [suggestedActivities, setSuggestedActivities] = useState<Partial<Activity>[]>(SUGGESTED_ACTIVITIES);
   const [recoveryActivities, setRecoveryActivities] = useState<Partial<Activity>[]>(RECOVERY_ACTIVITIES);
@@ -345,6 +366,19 @@ export default function App() {
   const [showBorrowWarning, setShowBorrowWarning] = useState(false);
   const [hasEstimated, setHasEstimated] = useState(false);
   const [isLearningModalOpen, setIsLearningModalOpen] = useState(false);
+  const [activitySuggestion, setActivitySuggestion] = useState<ActivitySuggestion | null>(null);
+  const [isLoadingActivitySuggestion, setIsLoadingActivitySuggestion] = useState(false);
+  const [activitySuggestionError, setActivitySuggestionError] = useState('');
+  const [activityNameSuggestions, setActivityNameSuggestions] = useState<ActivitySuggestion[]>([]);
+  const [isLoadingActivityNameSuggestions, setIsLoadingActivityNameSuggestions] = useState(false);
+  const [showActivityNameSuggestions, setShowActivityNameSuggestions] = useState(false);
+  const [recoveryAutocompleteError, setRecoveryAutocompleteError] = useState('');
+  const [autocompleteDebugText, setAutocompleteDebugText] = useState('');
+  const [isTestingFirestore, setIsTestingFirestore] = useState(false);
+  const [firestoreTestMessage, setFirestoreTestMessage] = useState('');
+  const [aiPatternInsights, setAiPatternInsights] = useState<string | null>(null);
+  const [isAnalyzingPatterns, setIsAnalyzingPatterns] = useState(false);
+  const [aiPatternError, setAiPatternError] = useState<string | null>(null);
 
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => {
     const saved = localStorage.getItem('spoon_has_seen_onboarding');
@@ -503,6 +537,22 @@ export default function App() {
     } else {
       setShowOnboardingModal(false);
     }
+  };
+
+  const awardXP = (amount: number, reason: string) => {
+    if (amount <= 0) return;
+
+    setTotalXP(prev => prev + amount);
+    setXpToast({ amount, reason });
+
+    if (xpToastTimeoutRef.current !== null) {
+      window.clearTimeout(xpToastTimeoutRef.current);
+    }
+
+    xpToastTimeoutRef.current = window.setTimeout(() => {
+      setXpToast(null);
+      xpToastTimeoutRef.current = null;
+    }, 2200);
   };
 
   const renderOnboardingModal = () => {
@@ -670,6 +720,83 @@ export default function App() {
     return sickMode ? spoons * 2 : spoons;
   };
 
+  const isRecoveryActivity = currentActivity?.category === 'recovery';
+  const suggestedEstimate = activitySuggestion?.suggestedSpoons ?? (isRecoveryActivity ? 2 : 3);
+
+  useEffect(() => {
+    if (screen !== 'activity' || !currentActivity?.name || currentActivity.id || hasEstimated) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSuggestion = async () => {
+      if (currentActivity.category === 'recovery') {
+        const existingRecoveryNames = recoveryActivities
+          .map(activity => activity.name)
+          .filter((name): name is string => typeof name === 'string' && name.trim().length > 0);
+
+        const localRecoverySuggestion = fallbackRecoverySuggestionsFromInput(
+          currentActivity.name || '',
+          existingRecoveryNames,
+          1
+        )[0];
+
+        const recoverySuggestion: ActivitySuggestion = {
+          activity: currentActivity.name || localRecoverySuggestion?.name || 'Recovery activity',
+          suggestedSpoons: localRecoverySuggestion?.suggestedSpoons ?? 2,
+          met: 0,
+        };
+
+        if (cancelled) return;
+
+        setActivitySuggestion(recoverySuggestion);
+        setEstimate(recoverySuggestion.suggestedSpoons);
+        setActivitySuggestionError('');
+        setIsLoadingActivitySuggestion(false);
+        return;
+      }
+
+      setIsLoadingActivitySuggestion(true);
+      setActivitySuggestionError('');
+
+      try {
+        const suggestion = await getSuggestionFromFirestore(currentActivity.name || '');
+        if (cancelled) return;
+
+        setActivitySuggestion(suggestion);
+
+        if (suggestion) {
+          setEstimate(suggestion.suggestedSpoons);
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        setActivitySuggestion(null);
+        setActivitySuggestionError('Kunne ikke hente forslag fra databasen.');
+        console.error('Failed to load activity suggestion', error);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingActivitySuggestion(false);
+        }
+      }
+    };
+
+    loadSuggestion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [screen, currentActivity?.name, currentActivity?.id, currentActivity?.category, hasEstimated, recoveryActivities]);
+
+  useEffect(() => {
+    if (screen !== 'activity') {
+      setActivitySuggestion(null);
+      setIsLoadingActivitySuggestion(false);
+      setActivitySuggestionError('');
+    }
+  }, [screen]);
+
   useEffect(() => {
     if (!breakReminderEnabled) return;
 
@@ -683,11 +810,157 @@ export default function App() {
     }
   }, [breakReminderEnabled, remainingSpoons, totalSpoons, showBreakModal, breakReminderAcknowledged, breakReminderThreshold]);
 
+  useEffect(() => {
+    if (screen !== 'custom-activity') {
+      setActivityNameSuggestions([]);
+      setIsLoadingActivityNameSuggestions(false);
+      setShowActivityNameSuggestions(false);
+      setRecoveryAutocompleteError('');
+      setAutocompleteDebugText('');
+      return;
+    }
+
+    const searchText = customName.trim();
+    if (searchText.length < 2) {
+      setActivityNameSuggestions([]);
+      setIsLoadingActivityNameSuggestions(false);
+      setShowActivityNameSuggestions(false);
+      setRecoveryAutocompleteError('');
+      if (import.meta.env.DEV && searchText.length > 0) {
+        setAutocompleteDebugText('Skriv mindst 2 tegn for autocomplete.');
+      } else {
+        setAutocompleteDebugText('');
+      }
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setIsLoadingActivityNameSuggestions(true);
+
+      if (customCategory === 'recovery') {
+        try {
+          const existingRecoveryNames = recoveryActivities
+            .map(activity => activity.name)
+            .filter((name): name is string => typeof name === 'string' && name.trim().length > 0);
+
+          const aiSuggestions = await suggestRecoveryFromInput(searchText, history, existingRecoveryNames, 8);
+          if (cancelled) return;
+
+          const results: ActivitySuggestion[] = aiSuggestions.map(item => ({
+            activity: item.name,
+            suggestedSpoons: item.suggestedSpoons,
+            met: 0,
+          }));
+
+          setRecoveryAutocompleteError('');
+          setActivityNameSuggestions(results);
+          setShowActivityNameSuggestions(true);
+          if (import.meta.env.DEV) {
+            setAutocompleteDebugText(`Recovery AI autocomplete - query: "${searchText}", matches: ${results.length}`);
+          }
+        } catch (error) {
+          if (cancelled) return;
+
+          const message = error instanceof Error ? error.message : String(error);
+
+          if (message.toLowerCase().includes('quota') || message.includes('429')) {
+            const existingRecoveryNames = recoveryActivities
+              .map(activity => activity.name)
+              .filter((name): name is string => typeof name === 'string' && name.trim().length > 0);
+
+            const fallback = fallbackRecoverySuggestionsFromInput(searchText, existingRecoveryNames, 8);
+            const fallbackResults: ActivitySuggestion[] = fallback.map(item => ({
+              activity: item.name,
+              suggestedSpoons: item.suggestedSpoons,
+              met: 0,
+            }));
+
+            setActivityNameSuggestions(fallbackResults);
+            setShowActivityNameSuggestions(fallbackResults.length > 0);
+            setRecoveryAutocompleteError(
+              fallbackResults.length > 0
+                ? 'AI quota ramt. Viser lokale forslag i stedet.'
+                : 'AI quota ramt, og ingen lokale forslag matchede input.'
+            );
+          } else {
+            setActivityNameSuggestions([]);
+            setShowActivityNameSuggestions(false);
+            if (message === 'NO_API_KEY') {
+              setRecoveryAutocompleteError('OpenAI API-nøgle mangler i .env.local (VITE_OPENAI_API_KEY).');
+            } else {
+              setRecoveryAutocompleteError('Kunne ikke hente AI-forslag lige nu. Prøv igen.');
+            }
+          }
+
+          if (import.meta.env.DEV) {
+            setAutocompleteDebugText(`Recovery AI autocomplete - fejl: ${message}`);
+          }
+        } finally {
+          if (!cancelled) {
+            setIsLoadingActivityNameSuggestions(false);
+          }
+        }
+
+        return;
+      }
+
+      try {
+        const results = await searchActivitySuggestions(searchText, 8);
+        if (cancelled) return;
+
+        setRecoveryAutocompleteError('');
+        setActivityNameSuggestions(results);
+        setShowActivityNameSuggestions(true);
+        if (import.meta.env.DEV) {
+          const debug = getAutocompleteDebugInfo();
+          setAutocompleteDebugText(
+            `Autocomplete debug - query: "${debug.query}", docs loaded: ${debug.docsLoaded}, matches: ${debug.matchesFound}${debug.reason ? `, reason: ${debug.reason}` : ''}`
+          );
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        setActivityNameSuggestions([]);
+        setShowActivityNameSuggestions(false);
+        setRecoveryAutocompleteError('');
+        if (import.meta.env.DEV) {
+          setAutocompleteDebugText('Autocomplete debug - fejl ved hentning. Se konsollen.');
+        }
+        console.error('Failed to fetch activity name suggestions', error);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingActivityNameSuggestions(false);
+        }
+      }
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [screen, customName, customCategory, recoveryActivities, history]);
+
   const handleAddModifier = (label: string, value: number) => {
     setDayState(prev => ({
       ...prev,
       modifiers: [...prev.modifiers, { id: Math.random().toString(), label, value }]
     }));
+  };
+
+  const handleManualFirestoreTest = async () => {
+    setIsTestingFirestore(true);
+    setFirestoreTestMessage('Tester Firestore...');
+
+    try {
+      const activities = await getActivities();
+      setFirestoreTestMessage(`Firestore OK: hentede ${activities.length} aktiviteter.`);
+    } catch (error) {
+      console.error('Manual Firestore test failed', error);
+      setFirestoreTestMessage('Firestore-fejl: kunne ikke hente aktiviteter. Se konsollen for detaljer.');
+    } finally {
+      setIsTestingFirestore(false);
+    }
   };
 
   const handleStartActivity = (activity: Partial<Activity>) => {
@@ -726,13 +999,25 @@ export default function App() {
   const handleStartCustomActivity = (category: 'suggested' | 'recovery') => {
     setCustomCategory(category);
     setCustomName('');
+    setCurrentActivity({ category });
+    setEstimate(2);
+    setActivityNameSuggestions([]);
+    setShowActivityNameSuggestions(false);
     setScreen('custom-activity');
   };
 
   const handleConfirmCustomName = () => {
     if (customName.trim()) {
-      handleStartActivity({ name: customName, category: customCategory });
+      setShowActivityNameSuggestions(false);
+      const lockedCategory: 'suggested' | 'recovery' = customCategory === 'recovery' ? 'recovery' : 'suggested';
+      handleStartActivity({ name: customName, category: lockedCategory });
     }
+  };
+
+  const handleSelectActivityNameSuggestion = (suggestion: ActivitySuggestion) => {
+    setCustomName(suggestion.activity);
+    setEstimate(suggestion.suggestedSpoons);
+    setShowActivityNameSuggestions(false);
   };
 
   const handleRemoveSuggested = (name: string) => {
@@ -794,11 +1079,16 @@ export default function App() {
           setEditingTemplate(null);
         } else {
           // Adding new
+          const resolvedCategory: 'suggested' | 'recovery' =
+            currentActivity.category === 'recovery' ? 'recovery' :
+            currentActivity.category === 'suggested' ? 'suggested' :
+            customCategory;
+
           const newActivity: Activity = {
             id: Math.random().toString(),
             name: finalName,
             estimatedSpoons: finalEstimate,
-            category: currentActivity.category!,
+            category: resolvedCategory,
             completed: false,
           };
           setDayState(prev => ({
@@ -807,12 +1097,12 @@ export default function App() {
           }));
 
           // Add to suggested/recovery lists if it's a new custom activity
-          if (currentActivity.category === 'suggested') {
+          if (resolvedCategory === 'suggested') {
             const exists = suggestedActivities.some(a => a.name === finalName);
             if (!exists) {
               setSuggestedActivities(prev => [...prev, { name: finalName, category: 'suggested', estimatedSpoons: finalEstimate }]);
             }
-          } else if (currentActivity.category === 'recovery') {
+          } else if (resolvedCategory === 'recovery') {
             const exists = recoveryActivities.some(a => a.name === finalName);
             if (!exists) {
               setRecoveryActivities(prev => [...prev, { name: finalName, category: 'recovery', estimatedSpoons: finalEstimate }]);
@@ -835,7 +1125,7 @@ export default function App() {
       const activity = prev.activities.find(a => a.id === id);
       if (activity && !activity.completed) {
         const xpGain = Math.max(5, (activity.estimatedSpoons || 1) * 10);
-        setTotalXP(prev => prev + xpGain);
+        awardXP(xpGain, activity.name);
       }
 
       return {
@@ -1015,7 +1305,7 @@ export default function App() {
     // Award bonus XP if day went well (remaining spoons >= 0)
     if (remainingSpoons >= 0) {
       const bonusXP = Math.min(50, remainingSpoons * 5);
-      setTotalXP(prev => prev + bonusXP);
+      awardXP(bonusXP, 'Daily balance bonus');
     }
 
     // Update history, avoiding duplicates for the same date
@@ -1050,6 +1340,14 @@ export default function App() {
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
                 <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Niveau {energyLevel.level}: {energyLevel.title}</span>
               </div>
+              <button
+                onClick={() => setShowXpLevelsModal(true)}
+                className="mt-1 inline-flex items-center gap-1 rounded-full bg-pastel-peach/20 px-2 py-0.5 hover:bg-pastel-peach/30 transition-colors"
+                aria-label="Vis XP levels"
+              >
+                <Sparkles className="w-3 h-3 text-pastel-peach" />
+                <span className="text-[10px] font-bold text-pastel-peach uppercase tracking-wider">{totalXP} XP</span>
+              </button>
             </div>
           </div>
           <div className="flex gap-3">
@@ -1064,6 +1362,20 @@ export default function App() {
             </button>
           </div>
         </header>
+
+        <AnimatePresence>
+          {xpToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -12, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.95 }}
+              className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-2xl border border-pastel-mint/40 bg-white px-4 py-2 shadow-lg"
+            >
+              <p className="text-xs font-black text-pastel-mint">+{xpToast.amount} XP</p>
+              <p className="text-[10px] text-gray-500">{xpToast.reason}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <main className="flex-1 px-6 pb-24 overflow-y-auto">
           <AnimatePresence mode="wait">
@@ -1096,41 +1408,47 @@ export default function App() {
                 </button>
 
                 {/* Spoon Indicator */}
-                <section className="bg-gradient-to-br from-pastel-mint to-pastel-lavender rounded-3xl p-6 text-gray-800 shadow-xl shadow-pastel-mint/10">
+                <section className="rounded-3xl p-6 border border-pastel-mint/30 bg-gradient-to-br from-pastel-mint/12 to-pastel-lavender/14 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Today's Spoons</p>
+                      <p className="text-gray-600 text-sm font-medium uppercase tracking-wider">Today's Spoons</p>
                       <h2 className={`text-4xl font-black transition-all duration-300 ${
-                        remainingSpoons <= 2 
-                          ? 'text-pastel-pink bg-white/95 px-3 py-1 rounded-2xl inline-block shadow-sm' 
-                          : 'text-gray-800'
+                        remainingSpoons <= 2
+                          ? 'text-pastel-pink'
+                          : 'text-[#1f2d3d]'
                       }`}>
                         {remainingSpoons} / {totalSpoons}
                       </h2>
                     </div>
                     <div className="flex gap-1 flex-wrap justify-end max-w-[120px]">
                       {Array.from({ length: Math.max(0, remainingSpoons) }).map((_, i) => (
-                        <SpoonIcon key={i} className="w-5 h-5 text-gray-800/80" />
+                        <SpoonIcon key={i} className="w-5 h-5 text-pastel-mint" />
                       ))}
                     </div>
                   </div>
+
+                  {remainingSpoons <= 2 && (
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-pastel-pink/30 bg-white/70 px-3 py-1 text-xs font-semibold text-pastel-pink">
+                      <AlertCircle className="w-3 h-3" /> Low energy mode
+                    </div>
+                  )}
                   
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     <button 
                       onClick={() => handleAddModifier('Slept badly', -2)}
-                      className="whitespace-nowrap bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1"
+                      className="whitespace-nowrap border border-pastel-pink/25 bg-pastel-pink/10 hover:bg-pastel-pink/15 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1"
                     >
                       <Moon className="w-3 h-3" /> Slept badly -2
                     </button>
                     <button 
                       onClick={() => handleAddModifier('Extra rest', 2)}
-                      className="whitespace-nowrap bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1"
+                      className="whitespace-nowrap border border-pastel-mint/25 bg-pastel-mint/10 hover:bg-pastel-mint/15 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-1"
                     >
                       <Sun className="w-3 h-3" /> +2 from yesterday
                     </button>
                   </div>
 
-                  <div className="mt-4 rounded-3xl p-4 shadow-sm border bg-white/80 border-gray-100">
+                  <div className="mt-4 rounded-3xl p-4 border border-pastel-blue/30 bg-white/85">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <Home className="w-5 h-5 text-pastel-blue" />
@@ -1305,7 +1623,7 @@ export default function App() {
                       onClick={() => handleStartCustomActivity('recovery')}
                       className="text-pastel-green text-sm font-semibold flex items-center gap-1"
                     >
-                      <Plus className="w-4 h-4" /> Add
+                      <Plus className="w-4 h-4" /> Add Recovery
                     </button>
                   </div>
                   <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
@@ -1388,7 +1706,9 @@ export default function App() {
                     <ArrowRight className="w-6 h-6 rotate-180" />
                   </button>
                   <div className="flex-1 text-center pr-10">
-                    <h2 className="text-sm font-bold text-pastel-mint uppercase tracking-widest">New Activity</h2>
+                    <h2 className="text-sm font-bold text-pastel-mint uppercase tracking-widest">
+                      {customCategory === 'recovery' ? 'Recovery Activity' : 'New Activity'}
+                    </h2>
                     <h3 className="text-3xl font-black">What's the plan?</h3>
                   </div>
                 </div>
@@ -1398,15 +1718,75 @@ export default function App() {
                     <input 
                       autoFocus
                       type="text"
-                      placeholder="e.g. Reading, Grocery shopping..."
+                      placeholder={customCategory === 'recovery' ? 'Recovery activity...' : 'e.g. Reading, Grocery shopping...'}
                       value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleConfirmCustomName()}
+                      onChange={(e) => {
+                        setCustomName(e.target.value);
+                        if (e.target.value.trim().length >= 2) {
+                          setShowActivityNameSuggestions(true);
+                        }
+                      }}
+                      onFocus={() => {
+                        if (activityNameSuggestions.length > 0) {
+                          setShowActivityNameSuggestions(true);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setShowActivityNameSuggestions(false);
+                          return;
+                        }
+
+                        if (e.key === 'Enter') {
+                          handleConfirmCustomName();
+                        }
+                      }}
                       className="w-full text-xl font-bold outline-none placeholder:text-gray-300"
                     />
+                    {(showActivityNameSuggestions || isLoadingActivityNameSuggestions) && (
+                      <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-2 space-y-1">
+                        {isLoadingActivityNameSuggestions && (
+                          <p className="px-3 py-2 text-xs text-gray-500">Finder forslag...</p>
+                        )}
+
+                        {!isLoadingActivityNameSuggestions && activityNameSuggestions.length === 0 && customName.trim().length >= 2 && (
+                          <p className="px-3 py-2 text-xs text-gray-500">
+                            {customCategory === 'recovery'
+                              ? (recoveryAutocompleteError || 'Ingen AI recovery-forslag fundet endnu.')
+                              : (import.meta.env.VITE_FIREBASE_PROJECT_ID
+                                ? 'Ingen forslag fundet endnu.'
+                                : 'Firebase mangler config. Opret .env.local med VITE_FIREBASE_* variabler.')}
+                          </p>
+                        )}
+
+                        {!isLoadingActivityNameSuggestions && activityNameSuggestions.map((suggestion, index) => (
+                          <button
+                            key={`${suggestion.activity}-${index}`}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSelectActivityNameSuggestion(suggestion);
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-xl hover:bg-white transition-colors"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-semibold text-sm text-[#2D3436] truncate">{suggestion.activity}</span>
+                              <span className="text-xs font-bold text-pastel-mint shrink-0">{suggestion.suggestedSpoons} spoons</span>
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              {suggestion.met > 0 ? `MET: ${suggestion.met.toFixed(1)}` : 'MET: ukendt'}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {import.meta.env.DEV && import.meta.env.VITE_SHOW_DEBUG_AUTOCOMPLETE === 'true' && !!autocompleteDebugText && (
+                      <p className="mt-3 text-[11px] text-gray-500">{autocompleteDebugText}</p>
+                    )}
                   </div>
                   <p className="text-sm text-gray-400 text-center px-4">
-                    Give your activity a name that helps you remember it later.
+                    {customCategory === 'recovery'
+                      ? 'Give your recovery activity a name that helps you remember it later.'
+                      : 'Give your activity a name that helps you remember it later.'}
                   </p>
                 </div>
 
@@ -1593,11 +1973,24 @@ export default function App() {
                       animate={{ opacity: 1 }}
                       className="space-y-3"
                     >
+                      {currentActivity?.category !== 'recovery' && isLoadingActivitySuggestion && (
+                        <p className="text-xs text-center text-gray-500">Finder forslag fra database...</p>
+                      )}
+                      {!isLoadingActivitySuggestion && activitySuggestion && (
+                        <p className="text-xs text-center text-gray-600">
+                          {currentActivity?.category === 'recovery'
+                            ? `Recovery-forslag: ${suggestedEstimate} spoons`
+                            : `Forslag: ${suggestedEstimate} spoons (MET: ${activitySuggestion.met.toFixed(1)})`}
+                        </p>
+                      )}
+                      {currentActivity?.category !== 'recovery' && !!activitySuggestionError && (
+                        <p className="text-xs text-center text-pastel-pink">{activitySuggestionError}</p>
+                      )}
                       <button 
                         onClick={() => setIsLearningModalOpen(true)}
                         className="w-full py-4 bg-pastel-mint text-white rounded-2xl font-bold shadow-lg shadow-pastel-mint/20 hover:bg-pastel-mint/80 transition-all flex items-center justify-center gap-2"
                       >
-                        Check community estimate <ChevronRight className="w-5 h-5" />
+                        {currentActivity?.category === 'recovery' ? 'Check recovery suggestion' : 'Check database suggestion'} <ChevronRight className="w-5 h-5" />
                       </button>
                     </motion.div>
                   )}
@@ -1650,14 +2043,14 @@ export default function App() {
                   <h2 className="text-2xl font-black">Quests & Rewards</h2>
                 </div>
 
-                <div className="bg-gradient-to-r from-pastel-peach to-pastel-pink p-6 rounded-3xl text-white shadow-xl shadow-pastel-peach/20">
+                <div className="p-6 rounded-3xl border border-pastel-peach/40 bg-white shadow-sm">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg">Current Streak</h3>
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold">Day {tiredStreak}/7</span>
+                    <span className="bg-pastel-peach/20 text-pastel-peach px-3 py-1 rounded-full text-sm font-bold">Day {tiredStreak}/7</span>
                   </div>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                      <div key={d} className={`flex-1 h-2 rounded-full ${d <= tiredStreak ? 'bg-white' : 'bg-white/30'}`} />
+                      <div key={d} className={`flex-1 h-2 rounded-full ${d <= tiredStreak ? 'bg-pastel-peach' : 'bg-gray-200'}`} />
                     ))}
                   </div>
                 </div>
@@ -1693,28 +2086,28 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-pastel-lavender to-pastel-mint p-6 rounded-3xl text-white shadow-xl shadow-pastel-lavender/20">
+                <div className="p-6 rounded-3xl border border-pastel-lavender/40 bg-white shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-lg">Energi-kompetence</h3>
-                      <p className="text-xs font-semibold opacity-80">Niveau {energyLevel.level}: {energyLevel.title}</p>
+                      <p className="text-xs font-semibold text-gray-500">Niveau {energyLevel.level}: {energyLevel.title}</p>
                     </div>
-                    <TrendingUp className="w-5 h-5" />
+                    <TrendingUp className="w-5 h-5 text-pastel-lavender" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black">{totalXP}</span>
-                    <span className="text-sm font-semibold opacity-90">XP samlet</span>
+                    <span className="text-4xl font-black text-pastel-lavender">{totalXP}</span>
+                    <span className="text-sm font-semibold text-gray-600">XP samlet</span>
                   </div>
                   <div className="mt-4 space-y-2">
-                    <div className="h-2 rounded-full bg-white/25 overflow-hidden">
-                      <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${energyProgress}%` }} />
+                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-pastel-lavender transition-all duration-500" style={{ width: `${energyProgress}%` }} />
                     </div>
-                    <p className="text-xs opacity-90">
+                    <p className="text-xs text-gray-600">
                       {nextEnergyLevel
                         ? `${xpToNextLevel} XP til niveau ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
                         : 'Du har nået højeste niveau i energi-kompetence.'}
                     </p>
-                    <p className="text-xs opacity-75">XP markerer din udvikling i at forstå og regulere din energi, ikke et spilscore.</p>
+                    <p className="text-xs text-gray-500">XP markerer din udvikling i at forstå og regulere din energi, ikke et spilscore.</p>
                   </div>
                 </div>
 
@@ -1958,6 +2351,28 @@ export default function App() {
                       Remember: your worth is not defined by your productivity.
                     </p>
                   </div>
+
+                  {import.meta.env.DEV && (
+                    <div className="bg-white border border-dashed border-pastel-mint/50 rounded-3xl p-6 shadow-sm space-y-3">
+                      <div className="flex items-center gap-2 text-pastel-mint">
+                        <Zap className="w-5 h-5" />
+                        <h4 className="font-bold">Dev: Firestore Test</h4>
+                      </div>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Knap til hurtig test af database-forbindelsen og antal aktiviteter.
+                      </p>
+                      <button
+                        onClick={handleManualFirestoreTest}
+                        disabled={isTestingFirestore}
+                        className="w-full py-3 bg-pastel-mint text-white rounded-2xl font-bold hover:bg-pastel-mint/80 transition-all disabled:opacity-60"
+                      >
+                        {isTestingFirestore ? 'Tester...' : 'Test Firestore'}
+                      </button>
+                      {!!firestoreTestMessage && (
+                        <p className="text-xs text-gray-600">{firestoreTestMessage}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <button 
@@ -2419,6 +2834,82 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+                {/* AI Pattern Detection */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🧠</span>
+                    <div>
+                      <h4 className="font-bold">AI Pattern Detection</h4>
+                      <p className="text-xs text-gray-400">Powered by GPT-4o mini</p>
+                    </div>
+                  </div>
+
+                  {aiPatternInsights ? (
+                    <div className="space-y-3">
+                      <div className="bg-pastel-mint/10 rounded-2xl p-4">
+                        {aiPatternInsights.split('\n').filter(line => line.trim()).map((line, i) => (
+                          <p key={i} className="text-sm text-gray-700 leading-relaxed mb-2 last:mb-0">{line}</p>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => { setAiPatternInsights(null); setAiPatternError(null); }}
+                        className="text-xs text-gray-400 hover:text-gray-600 underline"
+                      >
+                        Analyze again
+                      </button>
+                    </div>
+                  ) : aiPatternError ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-red-400 bg-red-50 rounded-2xl p-3">{aiPatternError}</p>
+                      <button
+                        onClick={() => setAiPatternError(null)}
+                        className="text-xs text-gray-400 hover:text-gray-600 underline"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-500">
+                        {history.length < 3
+                          ? `Log at least 3 days to unlock pattern detection (${history.length}/3 days logged).`
+                          : `${history.length} days of data ready to analyze.`}
+                      </p>
+                      <button
+                        disabled={history.length < 3 || isAnalyzingPatterns}
+                        onClick={async () => {
+                          setIsAnalyzingPatterns(true);
+                          setAiPatternError(null);
+                          try {
+                            const insights = await analyzePatterns(history);
+                            setAiPatternInsights(insights);
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : String(err);
+                            if (msg === 'NO_API_KEY') {
+                              setAiPatternError('OpenAI API key not set. Add VITE_OPENAI_API_KEY to your .env.local file.');
+                            } else if (msg === 'NOT_ENOUGH_DATA') {
+                              setAiPatternError('Need at least 3 days of history to detect patterns.');
+                            } else {
+                              setAiPatternError(`Error: ${msg}`);
+                            }
+                          } finally {
+                            setIsAnalyzingPatterns(false);
+                          }
+                        }}
+                        className="w-full py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isAnalyzingPatterns ? (
+                          <>
+                            <span className="animate-spin">⟳</span> Analyzing...
+                          </>
+                        ) : (
+                          <>🔍 Detect my patterns</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -2447,6 +2938,78 @@ export default function App() {
         {/* Onboarding Modal */}
         <AnimatePresence>
           {showOnboardingModal && renderOnboardingModal()}
+        </AnimatePresence>
+
+        {/* XP Levels Modal */}
+        <AnimatePresence>
+          {showXpLevelsModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowXpLevelsModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl space-y-5"
+                onClick={event => event.stopPropagation()}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-black">XP Levels</h3>
+                    <p className="text-xs text-gray-500">Se hvor mange XP hvert level kraever</p>
+                  </div>
+                  <button
+                    onClick={() => setShowXpLevelsModal(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    aria-label="Luk XP levels"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <div className="rounded-2xl bg-pastel-peach/10 p-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700">Din nuvaerende XP</span>
+                  <span className="text-sm font-black text-pastel-peach">{totalXP} XP</span>
+                </div>
+
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {ENERGY_LEVELS.map(level => {
+                    const isCurrent = energyLevel.level === level.level;
+                    const isUnlocked = totalXP >= level.minXP;
+
+                    return (
+                      <div
+                        key={level.level}
+                        className={`rounded-2xl border p-3 ${
+                          isCurrent
+                            ? 'border-pastel-mint bg-pastel-mint/10'
+                            : isUnlocked
+                              ? 'border-pastel-lavender/50 bg-pastel-lavender/10'
+                              : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-[#2D3436]">Level {level.level}: {level.title}</p>
+                          <span className="text-xs font-black text-gray-500">{level.minXP} XP</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {isCurrent
+                            ? 'Dit nuvaerende level'
+                            : isUnlocked
+                              ? 'Unlocked'
+                              : `Mangler ${Math.max(0, level.minXP - totalXP)} XP`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Borrow Warning Overlay */}
@@ -2491,11 +3054,13 @@ export default function App() {
                 <div className="text-center space-y-2">
                   <h3 className="text-2xl font-black">Learning Moment</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    {estimate === 3 
-                      ? `You estimated 3. Others also rate this as 3. Spot on!`
-                      : estimate < 3
-                        ? `You estimated ${estimate}. Others usually rate this as 3. You might be underestimating, or this is just easier for you!`
-                        : `You estimated ${estimate}. Others usually rate this as 3. This might be a learning moment for your energy patterns.`
+                    {currentActivity?.category === 'recovery'
+                      ? `You estimated ${estimate}. Recovery suggestion is ${suggestedEstimate}. Keep your own estimate or use the suggestion.`
+                      : (estimate === suggestedEstimate 
+                        ? `You estimated ${estimate}. Database suggestion is also ${suggestedEstimate}. Spot on!`
+                        : estimate < suggestedEstimate
+                          ? `You estimated ${estimate}. MET-based suggestion is ${suggestedEstimate}. You might be underestimating, or this activity may be more demanding.`
+                          : `You estimated ${estimate}. MET-based suggestion is ${suggestedEstimate}. Your body may just handle this differently, and that is okay.`)
                     }
                   </p>
                 </div>
@@ -2527,16 +3092,31 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-pastel-mint/30 p-4 rounded-2xl space-y-3 border border-pastel-mint/50">
-                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Community Insight</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-800">Average Rating</span>
-                    <span className="font-bold text-pastel-mint">3 Spoons</span>
+                {currentActivity?.category === 'recovery' ? (
+                  <div className="bg-pastel-green/20 p-4 rounded-2xl space-y-3 border border-pastel-green/40">
+                    <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Recovery Insight</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-800">Recovery-forslag</span>
+                      <span className="font-bold text-pastel-green">{suggestedEstimate} Spoons</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-tight">
+                      Forslaget er baseret paa recovery-ord i din aktivitet og tidligere recovery-forslag.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-gray-600 leading-tight">
-                    Comparing your energy needs with others helps you build a more accurate map of your own capacity.
-                  </p>
-                </div>
+                ) : (
+                  <div className="bg-pastel-mint/30 p-4 rounded-2xl space-y-3 border border-pastel-mint/50">
+                    <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Database Insight</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-800">MET-based suggestion</span>
+                      <span className="font-bold text-pastel-mint">{suggestedEstimate} Spoons</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-tight">
+                      {activitySuggestion
+                        ? `Found activity "${activitySuggestion.activity}" with MET ${activitySuggestion.met.toFixed(1)}.`
+                        : 'No activity match found in Firestore. Showing default suggestion of 3.'}
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <button 
@@ -2550,13 +3130,13 @@ export default function App() {
                   </button>
                   <button 
                     onClick={() => {
-                      setEstimate(3);
+                      setEstimate(suggestedEstimate);
                       setHasEstimated(true);
                       setIsLearningModalOpen(false);
                     }}
                     className="w-full py-4 bg-white border-2 border-gray-100 text-gray-600 rounded-2xl font-bold hover:border-pastel-mint/50 transition-all"
                   >
-                    Adjust to 3 spoons
+                    Adjust to {suggestedEstimate} spoons
                   </button>
                   <button 
                     onClick={() => setIsLearningModalOpen(false)}

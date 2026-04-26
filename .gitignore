@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Firebase service account keys (sensitive - must never be committed)
+firebase-import/serviceAccountKey.json
+firebase-import/*-firebase-adminsdk-*.json
