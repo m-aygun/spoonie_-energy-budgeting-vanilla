@@ -67,6 +67,7 @@ import { Activity, Modifier, Quest, DayState } from './types';
 import { ActivitySuggestion, getActivities, getAutocompleteDebugInfo, getSuggestionFromFirestore, searchActivitySuggestions } from './firebaseClient';
 import { analyzePatterns } from './aiInsights';
 import { fallbackRecoverySuggestionsFromInput, suggestRecoveryFromInput } from './aiRecovery';
+import { playActivityComplete, playXpGain, playLevelUp, playDayComplete, playBorrowWarning, playRecoveryAdd, playRecoveryComplete } from './sounds';
 
 const INITIAL_SPOONS = 12;
 
@@ -539,9 +540,22 @@ export default function App() {
     }
   };
 
-  const awardXP = (amount: number, reason: string) => {
+  const prevLevelRef = useRef(0);
+
+  // Play level-up sound when energy level increases
+  useEffect(() => {
+    if (energyLevel.level > prevLevelRef.current) {
+      if (prevLevelRef.current > 0) {
+        playLevelUp();
+      }
+      prevLevelRef.current = energyLevel.level;
+    }
+  }, [energyLevel.level]);
+
+  const awardXP = (amount: number, reason: string, silent = false) => {
     if (amount <= 0) return;
 
+    if (!silent) playXpGain();
     setTotalXP(prev => prev + amount);
     setXpToast({ amount, reason });
 
@@ -1096,6 +1110,10 @@ export default function App() {
             activities: [...prev.activities, newActivity]
           }));
 
+          if (resolvedCategory === 'recovery') {
+            playRecoveryAdd();
+          }
+
           // Add to suggested/recovery lists if it's a new custom activity
           if (resolvedCategory === 'suggested') {
             const exists = suggestedActivities.some(a => a.name === finalName);
@@ -1124,8 +1142,15 @@ export default function App() {
       // Award XP when completing (not when unchecking)
       const activity = prev.activities.find(a => a.id === id);
       if (activity && !activity.completed) {
-        const xpGain = Math.max(5, (activity.estimatedSpoons || 1) * 10);
-        awardXP(xpGain, activity.name);
+        if (activity.category === 'recovery') {
+          playRecoveryComplete();
+          const xpGain = Math.max(5, (activity.estimatedSpoons || 1) * 10);
+          awardXP(xpGain, activity.name, true);
+        } else {
+          playActivityComplete();
+          const xpGain = Math.max(5, (activity.estimatedSpoons || 1) * 10);
+          awardXP(xpGain, activity.name);
+        }
       }
 
       return {
@@ -1281,6 +1306,7 @@ export default function App() {
   };
 
   const confirmBorrow = () => {
+    playBorrowWarning();
     setDayState(prev => ({
       ...prev,
       borrowedFromTomorrow: prev.borrowedFromTomorrow + borrowAmount
@@ -1295,6 +1321,7 @@ export default function App() {
   };
 
   const handleCompleteDay = () => {
+    playDayComplete();
     const completedDay: DayState = {
       ...dayState,
       reflection,
