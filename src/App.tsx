@@ -596,13 +596,13 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm"
       >
         <motion.div
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
-          className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6"
+          className="bg-white rounded-[32px] p-6 sm:p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6"
         >
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-gradient-to-br from-pastel-mint to-pastel-lavender rounded-2xl flex items-center justify-center text-white">
@@ -1327,11 +1327,11 @@ export default function App() {
   const activeTheme = UI_THEMES.find(theme => theme.id === uiTheme) ?? UI_THEMES[0];
 
   return (
-    <div className={`theme-${activeTheme.id} min-h-screen font-sans selection:bg-pastel-mint selection:text-white bg-[#F8F9FA] text-[#2D3436]`}>
-      <div className="max-w-md mx-auto min-h-screen shadow-xl relative overflow-hidden flex flex-col bg-white">
+    <div className={`theme-${activeTheme.id} min-h-screen sm:p-4 font-sans selection:bg-pastel-mint selection:text-white bg-[#F8F9FA] text-[#2D3436]`}>
+      <div className="w-full max-w-md sm:max-w-3xl lg:max-w-5xl mx-auto min-h-screen sm:min-h-[calc(100vh-2rem)] sm:rounded-[28px] shadow-xl relative overflow-hidden flex flex-col bg-white">
         
         {/* Header */}
-        <header className="px-6 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
+        <header className="px-4 sm:px-6 lg:px-8 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center gap-2">
             {renderFullBodyAvatar('small')}
             <div>
@@ -1377,7 +1377,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 px-6 pb-24 overflow-y-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-28 overflow-y-auto">
           <AnimatePresence mode="wait">
             {screen === 'main' && (
               <motion.div
@@ -1565,7 +1565,7 @@ export default function App() {
                     </button>
                   </div>
                   <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {suggestedActivities.map((act, i) => (
                       <div
                         key={i}
@@ -2417,7 +2417,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hudtone</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_SKINS.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarSkinId;
@@ -2447,7 +2447,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Har</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_HAIRS.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarHairId;
@@ -2477,7 +2477,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Overdel</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_TOPS.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarTopId;
@@ -2507,7 +2507,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Underdel</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_BOTTOMS.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarBottomId;
@@ -2537,7 +2537,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Accessory</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_ACCESSORIES.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarAccessoryId;
@@ -2567,7 +2567,7 @@ export default function App() {
 
                   <div className="space-y-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Baggrund</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_FRAMES.map(option => {
                         const unlocked = option.unlockLevel <= energyLevel.level;
                         const active = option.id === avatarFrameId;
@@ -2666,7 +2666,7 @@ export default function App() {
                 </div>
 
                 {/* Statistics Overview */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
                     <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Avg Spoons</p>
                     <div className="flex items-center gap-2">
@@ -2947,14 +2947,14 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm"
               onClick={() => setShowXpLevelsModal(false)}
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-[32px] p-6 max-w-sm w-full shadow-2xl space-y-5"
+                className="bg-white rounded-[32px] p-6 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-5"
                 onClick={event => event.stopPropagation()}
               >
                 <div className="flex items-center justify-between">
@@ -3039,13 +3039,13 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6"
+                className="bg-white rounded-[32px] p-6 sm:p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6"
               >
                 <div className="w-16 h-16 bg-pastel-mint/30 rounded-2xl flex items-center justify-center text-pastel-mint mx-auto">
                   <Users className="w-10 h-10" />
@@ -3157,13 +3157,13 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6"
+                className="bg-white rounded-[32px] p-6 sm:p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6"
               >
                 <div className="w-16 h-16 bg-pastel-peach/30 rounded-2xl flex items-center justify-center text-pastel-peach mx-auto">
                   <AlertCircle className="w-10 h-10" />
@@ -3241,13 +3241,13 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6 text-center"
+                className="bg-white rounded-[32px] p-6 sm:p-8 max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 text-center"
               >
                 <div className="w-20 h-20 bg-pastel-mint/30 rounded-3xl flex items-center justify-center text-pastel-mint mx-auto relative">
                   <Coffee className="w-10 h-10" />
