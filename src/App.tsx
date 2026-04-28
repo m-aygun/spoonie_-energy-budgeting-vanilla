@@ -1485,7 +1485,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             {renderFullBodyAvatar('small')}
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie</h1>
+              <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie Learning</h1>
               <div className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
                 <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Niveau {energyLevel.level}: {energyLevel.title}</span>
@@ -1493,7 +1493,7 @@ export default function App() {
               <button
                 onClick={() => setShowXpLevelsModal(true)}
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-pastel-peach/20 px-2 py-0.5 hover:bg-pastel-peach/30 transition-colors"
-                aria-label="Vis XP levels"
+                aria-label="Vis XP unlocks"
               >
                 <Sparkles className="w-3 h-3 text-pastel-peach" />
                 <span className="text-[10px] font-bold text-pastel-peach uppercase tracking-wider">{totalXP} XP</span>
@@ -1563,6 +1563,7 @@ export default function App() {
                 <div className="space-y-1">
                   <p className="text-gray-400 text-sm font-medium uppercase tracking-widest">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                   <h2 className="text-3xl font-black text-[#2D3436]">{getGreeting()}</h2>
+                  <p className="text-sm text-gray-500 font-medium">Din energi-lab: træn estimater, byg streaks, og lås rewards op.</p>
                 </div>
 
                 <button
@@ -1578,6 +1579,31 @@ export default function App() {
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-300" />
                 </button>
+
+                <section className="rounded-3xl p-5 border border-pastel-lavender/30 bg-gradient-to-br from-pastel-lavender/12 to-pastel-blue/14 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Learning Journey</p>
+                      <h3 className="text-lg font-black text-[#2D3436]">Level op gennem vaner</h3>
+                    </div>
+                    <TrendingUp className="w-5 h-5 text-pastel-lavender" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/90 border border-gray-100 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Streak</p>
+                      <p className="text-xl font-black text-pastel-peach">{balancedStreak}</p>
+                    </div>
+                    <div className="bg-white/90 border border-gray-100 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Level</p>
+                      <p className="text-xl font-black text-pastel-lavender">{energyLevel.level}</p>
+                    </div>
+                    <div className="bg-white/90 border border-gray-100 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">XP</p>
+                      <p className="text-xl font-black text-pastel-mint">{totalXP}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600">Dagens mission: hold balancen og afslut mindst 1 recovery-aktivitet.</p>
+                </section>
 
                 {/* Spoon Indicator */}
                 <section className="rounded-3xl p-6 border border-pastel-mint/30 bg-gradient-to-br from-pastel-mint/12 to-pastel-lavender/14 shadow-sm">
@@ -2096,7 +2122,7 @@ export default function App() {
                     <ArrowRight className="w-6 h-6 rotate-180" />
                   </button>
                   <div className="flex-1 text-center pr-10">
-                    <h2 className="text-sm font-bold text-pastel-mint uppercase tracking-widest">Activity</h2>
+                    <h2 className="text-sm font-bold text-pastel-mint uppercase tracking-widest">Learning Step</h2>
                     <h3 className="text-3xl font-black">{currentActivity?.name}</h3>
                   </div>
                 </div>
@@ -2192,7 +2218,7 @@ export default function App() {
                 </AnimatePresence>
 
                 <p className="text-center text-xs text-gray-400 px-8">
-                  Estimating helps you learn your energy patterns over time.
+                  Hvert estimat giver dig mere præcision i dit energi-budget over tid.
                 </p>
               </motion.div>
             )}
@@ -2209,7 +2235,7 @@ export default function App() {
                   <button onClick={() => setScreen('main')} className="p-2 hover:bg-gray-100 rounded-full">
                     <ArrowRight className="w-6 h-6 rotate-180" />
                   </button>
-                  <h2 className="text-2xl font-black">Quests & Rewards</h2>
+                  <h2 className="text-2xl font-black">Quests, Rewards & Learning</h2>
                 </div>
 
                 <div className="p-6 rounded-3xl border border-pastel-peach/40 bg-white shadow-sm">
