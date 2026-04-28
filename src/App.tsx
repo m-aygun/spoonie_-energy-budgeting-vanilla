@@ -73,7 +73,14 @@ const INITIAL_SPOONS = 12;
 
 const LOW_SPOON_THRESHOLD = 2;
 
-const ENERGY_LEVELS = [
+const PROGRESSION_LEVELS = [
+  { level: 1, title: 'Begynder', minScore: 0 },
+  { level: 2, title: 'Bevidst', minScore: 6 },
+  { level: 3, title: 'Balanceret', minScore: 12 },
+  { level: 4, title: 'Selvreguleret', minScore: 20 },
+] as const;
+
+const AVATAR_XP_LEVELS = [
   { level: 1, title: 'Begynder', minXP: 0 },
   { level: 2, title: 'Bevidst', minXP: 100 },
   { level: 3, title: 'Balanceret', minXP: 250 },
@@ -112,6 +119,33 @@ const UI_THEMES = [
     swatches: ['#0F172A', '#1E293B', '#334155', '#22D3EE', '#A78BFA'],
   },
 ] as const;
+
+type ConfettiPiece = {
+  id: number;
+  left: number;
+  startVh: number;
+  drift: number;
+  size: number;
+  color: string;
+  duration: number;
+  delay: number;
+  rotate: number;
+  opacity: number;
+  shape: 'square' | 'circle' | 'ribbon';
+};
+
+const CONFETTI_COLORS = [
+  '#ff4d6d',
+  '#ffd166',
+  '#06d6a0',
+  '#118ab2',
+  '#8338ec',
+  '#ff9f1c',
+  '#2ec4b6',
+  '#ff006e',
+  '#3a86ff',
+  '#f15bb5',
+];
 
 const SpoonIcon = ({ className = 'w-4 h-4' }: { className?: string; key?: React.Key }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -228,6 +262,7 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 export default function App() {
   const hasLoadedActivitiesForDebug = useRef(false);
   const xpToastTimeoutRef = useRef<number | null>(null);
+  const confettiTimeoutRef = useRef<number | null>(null);
   const [screen, setScreen] = useState<'main' | 'activity' | 'summary' | 'quests' | 'custom-activity' | 'settings' | 'avatar' | 'edit-activity' | 'history'>('main');
   const [currentActivity, setCurrentActivity] = useState<Partial<Activity> | null>(null);
   const [customName, setCustomName] = useState('');
@@ -297,6 +332,7 @@ export default function App() {
   });
   const [showXpLevelsModal, setShowXpLevelsModal] = useState(false);
   const [xpToast, setXpToast] = useState<{ amount: number; reason: string } | null>(null);
+  const [levelUpConfetti, setLevelUpConfetti] = useState<ConfettiPiece[]>([]);
   const [avatarFrameId, setAvatarFrameId] = useState(() => {
     return localStorage.getItem('spoon_avatar_frame') || 'mint';
   });
@@ -340,6 +376,9 @@ export default function App() {
     return () => {
       if (xpToastTimeoutRef.current !== null) {
         window.clearTimeout(xpToastTimeoutRef.current);
+      }
+      if (confettiTimeoutRef.current !== null) {
+        window.clearTimeout(confettiTimeoutRef.current);
       }
     };
   }, []);
@@ -388,48 +427,106 @@ export default function App() {
   const [showOnboardingModal, setShowOnboardingModal] = useState(!hasSeenOnboarding);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
+  const balancedStreak = useMemo(() => {
+    const byDate = new Map<string, number>();
+
+    history.forEach(day => {
+      byDate.set(day.date, getDayRemainingSpoons(day));
+    });
+
+    byDate.set(dayState.date, getDayRemainingSpoons(dayState));
+
+    let currentDate = new Date(`${dayState.date}T00:00:00`);
+    let streakCount = 0;
+
+    while (true) {
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+      const dayRemaining = byDate.get(dateKey);
+
+      if (dayRemaining === undefined || dayRemaining < 0) {
+        break;
+      }
+
+      streakCount += 1;
+      currentDate = subDays(currentDate, 1);
+    }
+
+    return streakCount;
+  }, [history, dayState]);
+
+  const totalRecoveryCompletions = useMemo(() => {
+    const historyCount = history.reduce((acc, day) => {
+      const completedRecovery = day.activities.filter(a => a.completed && a.category === 'recovery').length;
+      return acc + completedRecovery;
+    }, 0);
+
+    const todayCount = dayState.activities.filter(a => a.completed && a.category === 'recovery').length;
+    return historyCount + todayCount;
+  }, [history, dayState.activities]);
+
+  const unlockedRewardCount = useMemo(() => {
+    let count = 0;
+    if (balancedStreak >= 3) count += 1;
+    if (totalRecoveryCompletions >= 3) count += 1;
+    return count;
+  }, [balancedStreak, totalRecoveryCompletions]);
+
+  const progressionScore = useMemo(() => {
+    return balancedStreak + unlockedRewardCount * 3;
+  }, [balancedStreak, unlockedRewardCount]);
+
   const energyLevel = useMemo(() => {
-    return [...ENERGY_LEVELS]
+    return [...PROGRESSION_LEVELS]
       .reverse()
-      .find(({ minXP }) => totalXP >= minXP) ?? ENERGY_LEVELS[0];
-  }, [totalXP]);
+      .find(({ minScore }) => progressionScore >= minScore) ?? PROGRESSION_LEVELS[0];
+  }, [progressionScore]);
 
   const nextEnergyLevel = useMemo(() => {
-    return ENERGY_LEVELS.find(({ level }) => level === energyLevel.level + 1) ?? null;
+    return PROGRESSION_LEVELS.find(({ level }) => level === energyLevel.level + 1) ?? null;
   }, [energyLevel.level]);
 
-  const xpToNextLevel = nextEnergyLevel ? Math.max(0, nextEnergyLevel.minXP - totalXP) : 0;
+  const scoreToNextLevel = nextEnergyLevel ? Math.max(0, nextEnergyLevel.minScore - progressionScore) : 0;
 
   const energyProgress = nextEnergyLevel
     ? Math.min(
         100,
-        Math.round(((totalXP - energyLevel.minXP) / (nextEnergyLevel.minXP - energyLevel.minXP)) * 100)
+        Math.round(((progressionScore - energyLevel.minScore) / (nextEnergyLevel.minScore - energyLevel.minScore)) * 100)
       )
     : 100;
 
+  const avatarXpLevel = useMemo(() => {
+    return [...AVATAR_XP_LEVELS]
+      .reverse()
+      .find(({ minXP }) => totalXP >= minXP) ?? AVATAR_XP_LEVELS[0];
+  }, [totalXP]);
+
+  const xpForAvatarUnlock = (unlockLevel: number) => {
+    return AVATAR_XP_LEVELS.find(level => level.level === unlockLevel)?.minXP ?? 0;
+  };
+
   const unlockedAvatarFrames = useMemo(() => {
-    return AVATAR_FRAMES.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_FRAMES.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const unlockedAvatarSkins = useMemo(() => {
-    return AVATAR_SKINS.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_SKINS.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const unlockedAvatarHairs = useMemo(() => {
-    return AVATAR_HAIRS.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_HAIRS.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const unlockedAvatarTops = useMemo(() => {
-    return AVATAR_TOPS.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_TOPS.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const unlockedAvatarBottoms = useMemo(() => {
-    return AVATAR_BOTTOMS.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_BOTTOMS.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const unlockedAvatarAccessories = useMemo(() => {
-    return AVATAR_ACCESSORIES.filter(option => option.unlockLevel <= energyLevel.level);
-  }, [energyLevel.level]);
+    return AVATAR_ACCESSORIES.filter(option => option.unlockLevel <= avatarXpLevel.level);
+  }, [avatarXpLevel.level]);
 
   const selectedAvatarFrame = AVATAR_FRAMES.find(option => option.id === avatarFrameId) ?? AVATAR_FRAMES[0];
   const selectedAvatarSkin = AVATAR_SKINS.find(option => option.id === avatarSkinId) ?? AVATAR_SKINS[0];
@@ -542,11 +639,37 @@ export default function App() {
 
   const prevLevelRef = useRef(0);
 
+  const createLevelUpConfetti = () => {
+    return Array.from({ length: 88 }, (_, index) => ({
+      id: index,
+      left: Math.random() * 100,
+      startVh: -18 - Math.random() * 25,
+      drift: (Math.random() - 0.5) * 220,
+      size: 6 + Math.random() * 10,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      duration: 1.8 + Math.random() * 1.4,
+      delay: Math.random() * 0.45,
+      rotate: (Math.random() - 0.5) * 900,
+      opacity: 0.72 + Math.random() * 0.28,
+      shape: (['square', 'circle', 'ribbon'] as const)[Math.floor(Math.random() * 3)],
+    }));
+  };
+
   // Play level-up sound when energy level increases
   useEffect(() => {
     if (energyLevel.level > prevLevelRef.current) {
       if (prevLevelRef.current > 0) {
         playLevelUp();
+        setLevelUpConfetti(createLevelUpConfetti());
+
+        if (confettiTimeoutRef.current !== null) {
+          window.clearTimeout(confettiTimeoutRef.current);
+        }
+
+        confettiTimeoutRef.current = window.setTimeout(() => {
+          setLevelUpConfetti([]);
+          confettiTimeoutRef.current = null;
+        }, 3200);
       }
       prevLevelRef.current = energyLevel.level;
     }
@@ -586,7 +709,7 @@ export default function App() {
       {
         title: 'Udvikl din energi-kompetence ⭐',
         subtitle: 'Små skridt, tydelig udvikling',
-        description: 'Når du gennemfører aktiviteter og passer på din energi, optjener du XP, som løfter dit niveau i energi-kompetence. Fokus er på personlig udvikling og bedre selvforståelse over tid.',
+        description: 'Dit niveau stiger gennem stabile streaks og unlocked rewards. XP bruges separat til at låse avatar-dele op.',
         icon: <TrendingUp className="w-12 h-12" />,
       },
       {
@@ -1391,6 +1514,28 @@ export default function App() {
         </header>
 
         <AnimatePresence>
+          {levelUpConfetti.length > 0 && (
+            <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden="true">
+              {levelUpConfetti.map(piece => (
+                <motion.span
+                  key={`confetti-${piece.id}-${piece.left}`}
+                  initial={{ y: `${piece.startVh}vh`, x: 0, rotate: 0, opacity: piece.opacity }}
+                  animate={{ y: '120vh', x: [0, piece.drift * 0.45, piece.drift], rotate: piece.rotate, opacity: [piece.opacity, piece.opacity, 0] }}
+                  transition={{ duration: piece.duration, delay: piece.delay, ease: 'easeOut' }}
+                  className={`absolute ${piece.shape === 'circle' ? 'rounded-full' : piece.shape === 'ribbon' ? 'rounded-md' : 'rounded-sm'}`}
+                  style={{
+                    top: 0,
+                    left: `${piece.left}%`,
+                    width: piece.shape === 'ribbon' ? `${piece.size * 0.45}px` : `${piece.size}px`,
+                    height: piece.shape === 'ribbon' ? `${piece.size * 2.2}px` : `${piece.size * 0.78}px`,
+                    backgroundColor: piece.color,
+                    boxShadow: `0 0 8px ${piece.color}`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
           {xpToast && (
             <motion.div
               initial={{ opacity: 0, y: -12, scale: 0.95 }}
@@ -1654,7 +1799,7 @@ export default function App() {
                     </button>
                   </div>
                   <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {recoveryActivities.map((act, i) => (
                       <div
                         key={i}
@@ -1667,39 +1812,36 @@ export default function App() {
                       >
                         <button
                           onClick={() => handleStartActivity(act)}
-                          className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-pastel-green/50 hover:bg-pastel-green/10 transition-all shadow-sm"
+                          className="w-full flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-2xl hover:border-pastel-green/50 hover:bg-pastel-green/10 transition-all text-left shadow-sm"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-pastel-green/30 text-pastel-green rounded-lg shrink-0">
-                              {ACTIVITY_ICONS[act.name!] || <Zap className="w-5 h-5" />}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{act.name}</span>
-                              {act.estimatedSpoons && (
-                                <span className="text-[10px] text-gray-400 font-bold">+{getDisplaySpoons(act)} Spoons</span>
-                              )}
-                            </div>
+                          <div className="p-2 bg-pastel-green/30 text-pastel-green rounded-lg shrink-0">
+                            {ACTIVITY_ICONS[act.name!] || <Zap className="w-5 h-5" />}
                           </div>
-                          <ChevronRight className="w-5 h-5 text-gray-300" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium text-sm line-clamp-1">{act.name}</span>
+                            {act.estimatedSpoons && (
+                              <span className="text-[10px] text-gray-400 font-bold">+{getDisplaySpoons(act)} Spoons</span>
+                            )}
+                          </div>
                         </button>
-                        <div className="absolute top-1/2 -right-2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditRecovery(act, i);
                             }}
-                            className="p-1.5 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-pastel-mint hover:border-pastel-mint shadow-sm"
+                            className="p-1 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-pastel-mint hover:border-pastel-mint shadow-sm"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-3 h-3" />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveRecovery(act.name!);
                             }}
-                            className="p-1.5 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-pastel-pink hover:border-pastel-pink shadow-sm"
+                            className="p-1 bg-white border border-gray-100 rounded-full text-gray-400 hover:text-pastel-pink hover:border-pastel-pink shadow-sm"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -2073,11 +2215,11 @@ export default function App() {
                 <div className="p-6 rounded-3xl border border-pastel-peach/40 bg-white shadow-sm">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-lg">Current Streak</h3>
-                    <span className="bg-pastel-peach/20 text-pastel-peach px-3 py-1 rounded-full text-sm font-bold">Day {tiredStreak}/7</span>
+                    <span className="bg-pastel-peach/20 text-pastel-peach px-3 py-1 rounded-full text-sm font-bold">Day {balancedStreak}</span>
                   </div>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                      <div key={d} className={`flex-1 h-2 rounded-full ${d <= tiredStreak ? 'bg-pastel-peach' : 'bg-gray-200'}`} />
+                      <div key={d} className={`flex-1 h-2 rounded-full ${d <= balancedStreak ? 'bg-pastel-peach' : 'bg-gray-200'}`} />
                     ))}
                   </div>
                 </div>
@@ -2122,8 +2264,8 @@ export default function App() {
                     <TrendingUp className="w-5 h-5 text-pastel-lavender" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-pastel-lavender">{totalXP}</span>
-                    <span className="text-sm font-semibold text-gray-600">XP samlet</span>
+                    <span className="text-4xl font-black text-pastel-lavender">{progressionScore}</span>
+                    <span className="text-sm font-semibold text-gray-600">progressionspoint</span>
                   </div>
                   <div className="mt-4 space-y-2">
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -2131,10 +2273,10 @@ export default function App() {
                     </div>
                     <p className="text-xs text-gray-600">
                       {nextEnergyLevel
-                        ? `${xpToNextLevel} XP til niveau ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
+                        ? `${scoreToNextLevel} point til niveau ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
                         : 'Du har nået højeste niveau i energi-kompetence.'}
                     </p>
-                    <p className="text-xs text-gray-500">XP markerer din udvikling i at forstå og regulere din energi, ikke et spilscore.</p>
+                    <p className="text-xs text-gray-500">Point = stabil streak + rewards. XP bruges kun til avatar unlocks.</p>
                   </div>
                 </div>
 
@@ -2431,14 +2573,14 @@ export default function App() {
 
                 <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-5">
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Dress up din avatar med hud, har, toj og accessories. Flere dele lases op, nar dit energi-kompetence niveau stiger.
+                    Dress up din avatar med hud, har, toj og accessories. Flere dele låses op, når du samler XP.
                   </p>
 
                   <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
                     {renderFullBodyAvatar('large')}
                     <div>
                       <p className="text-sm font-bold text-gray-800">Din avatar</p>
-                      <p className="text-xs text-gray-500">Niveau {energyLevel.level}: {energyLevel.title}</p>
+                      <p className="text-xs text-gray-500">XP Tier {avatarXpLevel.level}: {avatarXpLevel.title}</p>
                     </div>
                   </div>
 
@@ -2446,7 +2588,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hudtone</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_SKINS.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarSkinId;
                         return (
                           <button
@@ -2464,7 +2606,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2476,7 +2618,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Har</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_HAIRS.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarHairId;
                         return (
                           <button
@@ -2494,7 +2636,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2506,7 +2648,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Overdel</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_TOPS.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarTopId;
                         return (
                           <button
@@ -2524,7 +2666,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2536,7 +2678,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Underdel</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_BOTTOMS.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarBottomId;
                         return (
                           <button
@@ -2554,7 +2696,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2566,7 +2708,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Accessory</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_ACCESSORIES.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarAccessoryId;
                         return (
                           <button
@@ -2584,7 +2726,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2596,7 +2738,7 @@ export default function App() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Baggrund</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_FRAMES.map(option => {
-                        const unlocked = option.unlockLevel <= energyLevel.level;
+                        const unlocked = option.unlockLevel <= avatarXpLevel.level;
                         const active = option.id === avatarFrameId;
                         return (
                           <button
@@ -2614,7 +2756,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved niveau {option.unlockLevel}</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2967,7 +3109,7 @@ export default function App() {
           {showOnboardingModal && renderOnboardingModal()}
         </AnimatePresence>
 
-        {/* XP Levels Modal */}
+        {/* XP Unlocks Modal */}
         <AnimatePresence>
           {showXpLevelsModal && (
             <motion.div
@@ -2986,13 +3128,13 @@ export default function App() {
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-black">XP Levels</h3>
-                    <p className="text-xs text-gray-500">Se hvor mange XP hvert level kraever</p>
+                    <h3 className="text-2xl font-black">XP Unlocks</h3>
+                    <p className="text-xs text-gray-500">Se hvornår avatar tiers låses op</p>
                   </div>
                   <button
                     onClick={() => setShowXpLevelsModal(false)}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label="Luk XP levels"
+                    aria-label="Luk XP unlocks"
                   >
                     <X className="w-5 h-5 text-gray-500" />
                   </button>
@@ -3004,8 +3146,8 @@ export default function App() {
                 </div>
 
                 <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {ENERGY_LEVELS.map(level => {
-                    const isCurrent = energyLevel.level === level.level;
+                  {AVATAR_XP_LEVELS.map(level => {
+                    const isCurrent = avatarXpLevel.level === level.level;
                     const isUnlocked = totalXP >= level.minXP;
 
                     return (
@@ -3020,12 +3162,12 @@ export default function App() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-[#2D3436]">Level {level.level}: {level.title}</p>
+                          <p className="text-sm font-bold text-[#2D3436]">Avatar Tier {level.level}: {level.title}</p>
                           <span className="text-xs font-black text-gray-500">{level.minXP} XP</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
                           {isCurrent
-                            ? 'Dit nuvaerende level'
+                            ? 'Dit nuvaerende avatar tier'
                             : isUnlocked
                               ? 'Unlocked'
                               : `Mangler ${Math.max(0, level.minXP - totalXP)} XP`}
