@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spoonie Complete Wireframe</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --paper: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --tile: #f9fafb;
+      --accent: #374151;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Arial", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #111827;
+      color: #fff;
+      border-bottom: 1px solid #000;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+    }
+
+    .topbar .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid #9ca3af;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn:hover { background: #f3f4f6; }
+
+    .layout {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .legend {
+      background: var(--paper);
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .legend-item {
+      border: 1px dashed #9ca3af;
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #fafafa;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .frame {
+      background: var(--paper);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      min-height: 680px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .frame-title {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .screen {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .wire-header {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--tile);
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .wire-chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid #9ca3af;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #4b5563;
+      background: #f3f4f6;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .section h3 {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #4b5563;
+    }
+
+    .hero {
+      border: 1px dashed #9ca3af;
+      border-radius: 10px;
+      background: #f9fafb;
+      min-height: 70px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f9fafb;
+      min-height: 64px;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      display: grid;
+      align-content: space-between;
+    }
+
+    .tile .label {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .row {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f9fafb;
+      min-height: 44px;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row .left {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #9ca3af;
+      border-radius: 4px;
+      background: #e5e7eb;
+      flex: 0 0 auto;
+    }
+
+    .input {
+      border: 1px dashed #9ca3af;
+      border-radius: 8px;
+      min-height: 42px;
+      background: #fafafa;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .actions-bar {
+      border-top: 1px solid var(--line);
+      padding: 10px;
+      background: #f9fafb;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mobile-nav {
+      border-top: 1px solid var(--line);
+      background: #fff;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .nav-item {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      background: #f9fafb;
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 10px;
+      color: #6b7280;
+      padding: 4px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .nav-item.active {
+      border-color: #8b5cf6;
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .cta {
+      border: 1px solid #9ca3af;
+      border-radius: 10px;
+      min-height: 40px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      background: #fff;
+      text-align: center;
+      padding: 6px;
+    }
+
+    .cta.primary {
+      background: #e5e7eb;
+      border-color: #6b7280;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      color: #4b5563;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .flow {
+      border: 1px dashed #9ca3af;
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 11px;
+      color: #4b5563;
+      background: #fafafa;
+    }
+
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: repeat(2, minmax(300px, 1fr)); }
+      .legend { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .topbar { position: static; }
+      .legend { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .topbar { display: none; }
+      body { background: #fff; }
+      .layout { max-width: none; padding: 0; }
+      .frame { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Spoonie - Complete Wireframe Pack</h1>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">Download as PDF</button>
+      <button class="btn" onclick="scrollToTop()">Back to Top</button>
+    </div>
+  </div>
+
+  <main class="layout">
+    <section class="legend">
+      <div class="legend-item">Solid border: screen components</div>
+      <div class="legend-item">Dashed border: learning hints or guidance blocks</div>
+      <div class="legend-item">Gray fill: secondary content</div>
+      <div class="legend-item">Bottom bars: sticky decision actions</div>
+      <div class="legend-item">Bottom nav: Home, Activities, Statistics, Profile</div>
+    </section>
+
+    <section class="grid">
+      <article class="frame">
+        <div class="frame-title">01. Main Dashboard</div>
+        <div class="screen">
+          <div class="wire-header"><span>Header: Avatar + Level + XP</span><span>History | Quests | Settings</span></div>
+          <div class="section">
+            <h3>Greeting + Learning Intent</h3>
+            <div class="hero">Daily greeting, date, and "Learning Journey" context</div>
+            <div class="wire-chip-row">
+              <div class="chip">Streak</div>
+              <div class="chip">Level</div>
+              <div class="chip">XP</div>
+              <div class="chip">Mission</div>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Spoon Budget Card</h3>
+            <div class="hero">Remaining / Total spoons + chips for modifiers + low energy warning</div>
+          </div>
+          <div class="section">
+            <h3>My Plan</h3>
+            <div class="list">
+              <div class="row"><div class="left"><div class="icon"></div><span>Planned activity row with cost and status</span></div><span>Edit/Delete</span></div>
+              <div class="row"><div class="left"><div class="icon"></div><span>Planned activity row with cost and status</span></div><span>Edit/Delete</span></div>
+              <div class="row"><div class="left"><div class="icon"></div><span>Planned activity row with cost and status</span></div><span>Edit/Delete</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Borrow</div>
+          <div class="cta primary">Save Spoons</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">02. Suggested Activities</div>
+        <div class="screen">
+          <div class="wire-header"><span>Section title + Add Activity</span><span>Drag-to-reorder enabled</span></div>
+          <div class="section">
+            <h3>Suggested Tile Grid</h3>
+            <div class="tiles">
+              <div class="tile"><div class="label">Activity tile</div><span>icon + title + spoon estimate</span></div>
+              <div class="tile"><div class="label">Activity tile</div><span>hover edit/delete affordance</span></div>
+              <div class="tile"><div class="label">Activity tile</div><span>category: suggested</span></div>
+              <div class="tile"><div class="label">Activity tile</div><span>single tap starts flow</span></div>
+            </div>
+          </div>
+          <div class="flow">Flow: Tap tile -> Activity Estimate -> Confirm -> Added to Plan</div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Add custom suggested</div>
+          <div class="cta">Back</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">03. Recovery Activities</div>
+        <div class="screen">
+          <div class="wire-header"><span>Recovery / Low-energy + Add Recovery</span><span>Small tiles like suggested</span></div>
+          <div class="section">
+            <h3>Recovery Tile Grid</h3>
+            <div class="tiles">
+              <div class="tile"><div class="label">Recovery tile</div><span>green accent + plus spoons</span></div>
+              <div class="tile"><div class="label">Recovery tile</div><span>edit/delete mini controls</span></div>
+              <div class="tile"><div class="label">Recovery tile</div><span>category: recovery</span></div>
+              <div class="tile"><div class="label">Recovery tile</div><span>single tap starts flow</span></div>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Carry-over Notice</h3>
+            <div class="hero">Remaining spoons carry over to tomorrow</div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Borrow</div>
+          <div class="cta primary">Save Spoons</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">04. Custom Activity Entry</div>
+        <div class="screen">
+          <div class="wire-header"><span>New Activity / Recovery Activity</span><span>Autocomplete suggestions</span></div>
+          <div class="section">
+            <h3>Input + Suggestions</h3>
+            <div class="input">Type activity name...</div>
+            <div class="list">
+              <div class="row"><div class="left"><div class="icon"></div><span>Suggestion item + spoon count</span></div><span>MET/AI source</span></div>
+              <div class="row"><div class="left"><div class="icon"></div><span>Suggestion item + spoon count</span></div><span>MET/AI source</span></div>
+            </div>
+          </div>
+          <div class="flow">Flow: Name -> Next: estimate energy</div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta primary">Next: Estimate Energy</div>
+          <div class="cta">Cancel</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">05. Activity Estimate</div>
+        <div class="screen">
+          <div class="wire-header"><span>Learning Step: Activity Name</span><span>Back button</span></div>
+          <div class="section">
+            <h3>Interactive Estimate Selector</h3>
+            <div class="hero">Stepper / slider / spoon visual to set estimate</div>
+            <div class="wire-chip-row">
+              <div class="chip">Estimated spoons</div>
+              <div class="chip">Suggested spoons</div>
+              <div class="chip">Learning hint</div>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Learning Suggestion Modal Trigger</h3>
+            <div class="hero">Check database suggestion or recovery suggestion</div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta primary">Confirm Estimate</div>
+          <div class="cta">Remove / Back</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">06. Learning Suggestion Modal</div>
+        <div class="screen">
+          <div class="wire-header"><span>Modal overlay</span><span>Keep / Adjust / Go back</span></div>
+          <div class="section">
+            <h3>Insight Panel</h3>
+            <div class="hero">Database insight OR recovery insight panel with suggested spoons</div>
+          </div>
+          <div class="section">
+            <h3>Decision Buttons</h3>
+            <div class="list">
+              <div class="row"><span>Keep my estimate</span><span>primary</span></div>
+              <div class="row"><span>Adjust to suggested</span><span>secondary</span></div>
+              <div class="row"><span>Go back</span><span>text button</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Modal dismiss</div>
+          <div class="cta primary">Apply choice</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">07. Quests, Rewards, Learning</div>
+        <div class="screen">
+          <div class="wire-header"><span>Streak + reward cards</span><span>Energy competence progression</span></div>
+          <div class="section">
+            <h3>Current Streak</h3>
+            <div class="hero">Day counter + streak progress bar</div>
+          </div>
+          <div class="section">
+            <h3>Reward Cards</h3>
+            <div class="list">
+              <div class="row"><span>Consistency bonus</span><span>+2 spoons</span></div>
+              <div class="row"><span>Recovery master</span><span>+1 spoon</span></div>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Progression Card</h3>
+            <div class="hero">Level + progression points + next level requirement</div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Back to Main</div>
+          <div class="cta">Open XP Unlocks</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">08. Avatar Studio</div>
+        <div class="screen">
+          <div class="wire-header"><span>Avatar preview + XP tier</span><span>Customization categories</span></div>
+          <div class="section">
+            <h3>Avatar Preview</h3>
+            <div class="hero">Large avatar preview frame and current XP tier</div>
+          </div>
+          <div class="section">
+            <h3>Unlockable Option Grids</h3>
+            <div class="tiles">
+              <div class="tile"><div class="label">Skin tones</div><span>locked by XP threshold</span></div>
+              <div class="tile"><div class="label">Hair</div><span>locked by XP threshold</span></div>
+              <div class="tile"><div class="label">Top / Bottom</div><span>locked by XP threshold</span></div>
+              <div class="tile"><div class="label">Accessories / Frame</div><span>locked by XP threshold</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Back</div>
+          <div class="cta primary">Save Avatar</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">09. Settings + Utility Modals</div>
+        <div class="screen">
+          <div class="wire-header"><span>Preferences</span><span>Toggles + reset actions</span></div>
+          <div class="section">
+            <h3>Toggles</h3>
+            <div class="list">
+              <div class="row"><span>Sick Mode</span><span>toggle</span></div>
+              <div class="row"><span>Quick Add unlock state</span><span>locked/unlocked</span></div>
+              <div class="row"><span>Work from Home mode</span><span>toggle</span></div>
+            </div>
+          </div>
+          <div class="section">
+            <h3>Modals</h3>
+            <div class="tiles">
+              <div class="tile"><div class="label">Borrow Modal</div><span>stepper + consequence + confirm</span></div>
+              <div class="tile"><div class="label">Break Reminder</div><span>pause coaching actions</span></div>
+              <div class="tile"><div class="label">XP Unlocks</div><span>tiers + required XP</span></div>
+              <div class="tile"><div class="label">Onboarding</div><span>multi-step intro</span></div>
+            </div>
+          </div>
+          <div class="flow">Global overlays: XP toast, level-up confetti, borrow warning banner</div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Reset Day</div>
+          <div class="cta">Back to Main</div>
+        </div>
+        <div class="mobile-nav">
+          <div class="nav-item active">Home</div>
+          <div class="nav-item">Activities</div>
+          <div class="nav-item">Statistics</div>
+          <div class="nav-item">Profile</div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-title">10. Bottom Navigation Pattern</div>
+        <div class="screen">
+          <div class="wire-header"><span>Global mobile navigation</span><span>Visible on all primary screens</span></div>
+          <div class="section">
+            <h3>Navigation Tabs</h3>
+            <div class="hero">Persistent bottom bar to move quickly between core app areas</div>
+            <div class="list">
+              <div class="row"><span>Home</span><span>Dashboard + plan + quick actions</span></div>
+              <div class="row"><span>Activities</span><span>Suggested + recovery tiles</span></div>
+              <div class="row"><span>Statistics</span><span>History + trends + progress</span></div>
+              <div class="row"><span>Profile</span><span>Avatar + preferences + consent</span></div>
+            </div>
+          </div>
+          <div class="flow">Interaction: current tab is highlighted, tapping a tab switches root screen.</div>
+        </div>
+        <div class="actions-bar">
+          <div class="cta">Tab behavior spec</div>
+          <div class="cta primary">Navigation states</div>
+        </div>
+        <div class="mobile-nav">
+          <div class="nav-item active">Home</div>
+          <div class="nav-item">Activities</div>
+          <div class="nav-item">Statistics</div>
+          <div class="nav-item">Profile</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="footer-note">
+      <strong>How to download:</strong> click "Download as PDF" in the top-right.
+      In the print dialog, set Destination to "Save as PDF".
+      
+      <br /><br />
+      <strong>What this wireframe covers:</strong> all core user journeys (plan day, estimate, recovery, learning feedback, streak/reward progression, avatar unlocks, settings, and modal states).
+    </section>
+  </main>
+
+  <script>
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  </script>
+</body>
+</html>
