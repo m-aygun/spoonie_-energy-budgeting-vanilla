@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import spoonieLogoUrl from '../spoonie_logo-removebg-preview.png';
 import { 
   Zap, 
   Plus, 
@@ -1485,7 +1486,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             {renderFullBodyAvatar('small')}
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie Learning</h1>
+              <img src={spoonieLogoUrl} alt="Spoonie" className="h-10 w-auto" />
               <div className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
                 <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Level {energyLevel.level}: {energyLevel.title}</span>
