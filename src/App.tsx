@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -74,48 +74,48 @@ const INITIAL_SPOONS = 12;
 const LOW_SPOON_THRESHOLD = 2;
 
 const PROGRESSION_LEVELS = [
-  { level: 1, title: 'Begynder', minScore: 0 },
-  { level: 2, title: 'Bevidst', minScore: 6 },
-  { level: 3, title: 'Balanceret', minScore: 12 },
-  { level: 4, title: 'Selvreguleret', minScore: 20 },
+  { level: 1, title: 'Beginner', minScore: 0 },
+  { level: 2, title: 'Aware', minScore: 6 },
+  { level: 3, title: 'Balanced', minScore: 12 },
+  { level: 4, title: 'Self-regulated', minScore: 20 },
 ] as const;
 
 const AVATAR_XP_LEVELS = [
-  { level: 1, title: 'Begynder', minXP: 0 },
-  { level: 2, title: 'Bevidst', minXP: 100 },
-  { level: 3, title: 'Balanceret', minXP: 250 },
-  { level: 4, title: 'Selvreguleret', minXP: 450 },
+  { level: 1, title: 'Beginner', minXP: 0 },
+  { level: 2, title: 'Aware', minXP: 100 },
+  { level: 3, title: 'Balanced', minXP: 250 },
+  { level: 4, title: 'Self-regulated', minXP: 450 },
 ] as const;
 
 const UI_THEMES = [
   {
     id: 'classic',
     label: 'Classic Mint',
-    description: 'Din nuvaerende farvestil',
+    description: 'Your current color style',
     swatches: ['#1ABC9C', '#FF8C42', '#9B59B6', '#27AE60', '#FF1493'],
   },
   {
     id: 'nordic',
     label: 'Nordic Soft',
-    description: 'Koelige og rolige toner',
+    description: 'Cool and calm tones',
     swatches: ['#7A9EA4', '#C7B9A0', '#DCD4B6', '#DF8A8B', '#8D7BA0'],
   },
   {
     id: 'berry',
     label: 'Berry Dusk',
-    description: 'Mauve og bordeaux nuancer',
+    description: 'Mauve and burgundy shades',
     swatches: ['#CBC7DF', '#A4AED2', '#B2889E', '#995F70', '#4E4D67'],
   },
   {
     id: 'sage',
     label: 'Sage Paper',
-    description: 'Blod pastel med lav kontrast',
+    description: 'Soft pastel with low contrast',
     swatches: ['#BCD0D0', '#EFD1D4', '#E8DDE1', '#C5C89F', '#9FB8AC'],
   },
   {
     id: 'dark',
     label: 'Dark Mode',
-    description: 'Mork baggrund med tydelig kontrast',
+    description: 'Dark background with clear contrast',
     swatches: ['#0F172A', '#1E293B', '#334155', '#22D3EE', '#A78BFA'],
   },
 ] as const;
@@ -162,24 +162,24 @@ const AVATAR_FRAMES = [
 ] as const;
 
 const AVATAR_SKINS = [
-  { id: 'light', label: 'Lys', className: 'bg-[#F6D2B4]', unlockLevel: 1 },
-  { id: 'tan', label: 'Solbrun', className: 'bg-[#DEB08A]', unlockLevel: 1 },
-  { id: 'brown', label: 'Brun', className: 'bg-[#B97C56]', unlockLevel: 2 },
-  { id: 'deep', label: 'Mork', className: 'bg-[#7A4D34]', unlockLevel: 3 },
+  { id: 'light', label: 'Light', className: 'bg-[#F6D2B4]', unlockLevel: 1 },
+  { id: 'tan', label: 'Tan', className: 'bg-[#DEB08A]', unlockLevel: 1 },
+  { id: 'brown', label: 'Brown', className: 'bg-[#B97C56]', unlockLevel: 2 },
+  { id: 'deep', label: 'Dark', className: 'bg-[#7A4D34]', unlockLevel: 3 },
 ] as const;
 
 const AVATAR_HAIRS = [
-  { id: 'short', label: 'Kort', colorClass: 'bg-neutral-800', unlockLevel: 1 },
-  { id: 'curly', label: 'Krollet', colorClass: 'bg-amber-900', unlockLevel: 2 },
+  { id: 'short', label: 'Short', colorClass: 'bg-neutral-800', unlockLevel: 1 },
+  { id: 'curly', label: 'Curly', colorClass: 'bg-amber-900', unlockLevel: 2 },
   { id: 'bob', label: 'Bob', colorClass: 'bg-orange-950', unlockLevel: 2 },
-  { id: 'bun', label: 'Knold', colorClass: 'bg-neutral-900', unlockLevel: 3 },
+  { id: 'bun', label: 'Bun', colorClass: 'bg-neutral-900', unlockLevel: 3 },
 ] as const;
 
 const AVATAR_TOPS = [
   { id: 'hoodie', label: 'Hoodie', className: 'bg-emerald-400', unlockLevel: 1 },
   { id: 'tee', label: 'T-shirt', className: 'bg-sky-400', unlockLevel: 1 },
-  { id: 'jacket', label: 'Jakke', className: 'bg-indigo-500', unlockLevel: 2 },
-  { id: 'knit', label: 'Strik', className: 'bg-rose-400', unlockLevel: 3 },
+  { id: 'jacket', label: 'Jacket', className: 'bg-indigo-500', unlockLevel: 2 },
+  { id: 'knit', label: 'Knit', className: 'bg-rose-400', unlockLevel: 3 },
 ] as const;
 
 const AVATAR_BOTTOMS = [
@@ -190,10 +190,10 @@ const AVATAR_BOTTOMS = [
 ] as const;
 
 const AVATAR_ACCESSORIES = [
-  { id: 'none', label: 'Ingen', emoji: '', unlockLevel: 1 },
-  { id: 'glasses', label: 'Briller', emoji: '🕶️', unlockLevel: 2 },
-  { id: 'cap', label: 'Kasket', emoji: '🧢', unlockLevel: 2 },
-  { id: 'sparkle', label: 'Stjerne', emoji: '✨', unlockLevel: 4 },
+  { id: 'none', label: 'None', emoji: '', unlockLevel: 1 },
+  { id: 'glasses', label: 'Glasses', emoji: '🕶️', unlockLevel: 2 },
+  { id: 'cap', label: 'Cap', emoji: '🧢', unlockLevel: 2 },
+  { id: 'sparkle', label: 'Sparkle', emoji: '✨', unlockLevel: 4 },
 ] as const;
 
 const getDayRemainingSpoons = (day: DayState) => {
@@ -696,32 +696,32 @@ export default function App() {
     const steps = [
       {
         title: 'Velkommen til Spoonie! 🌟',
-        subtitle: 'Dit energi-budgeterings værktøj',
-        description: 'Spoonie hjælper dig med at styre din daglige energi ved hjælp af \"spoons\" - en konkret måde at målemetro din kapacitet.',
+        subtitle: 'Your energy budgeting tool',
+        description: 'Spoonie helps you manage your daily energy using \"spoons\" - a concrete way to measure your capacity.',
         icon: <Zap className="w-12 h-12" />,
       },
       {
         title: 'Hvad er \"Spoons\"? 🥄',
-        subtitle: 'Din daglige energi-valuta',
-        description: 'Hver aktivitet koster spoons. Du starter med 12 spoons daglig. Når du planlægger aktiviteter, bruger du spoons. Hvis du løber tør, er det fint - du kan låne fra i morgen (men det har konsekvenser).',
+        subtitle: 'Your daily energy currency',
+        description: 'Each activity costs spoons. You start with 12 spoons daily. When you plan activities, you spend spoons. If you run out, that\'s okay - you can borrow from tomorrow (but it has consequences).',
         icon: <Coffee className="w-12 h-12" />,
       },
       {
-        title: 'Udvikl din energi-kompetence ⭐',
-        subtitle: 'Små skridt, tydelig udvikling',
-        description: 'Dit niveau stiger gennem stabile streaks og unlocked rewards. XP bruges separat til at låse avatar-dele op.',
+        title: 'Build your energy skills ⭐',
+        subtitle: 'Small steps, clear progress',
+        description: 'Your level rises through stable streaks and unlocked rewards. XP is used separately to unlock avatar parts.',
         icon: <TrendingUp className="w-12 h-12" />,
       },
       {
-        title: 'Træt-Streak 😴',
-        subtitle: 'Registrer når du har det dårligt',
-        description: 'Hvis du slutter en dag med færre end 2 spoons tilbage, tæller det som en \"træt dag\". Efter 3 dage i træk med få spoons, låses konkrete valg op som gør det lettere at bruge appen.',
+        title: 'Tired Streak 😴',
+        subtitle: "Track when you're struggling",
+        description: 'If you end a day with fewer than 2 spoons left, it counts as a \"tired day\". After 3 tired days in a row, specific options unlock that make the app easier to use.',
         icon: <Moon className="w-12 h-12" />,
       },
       {
-        title: 'Du er klar! 🚀',
-        subtitle: 'Kom i gang med din første dag',
-        description: 'Start med at tilføje aktiviteter til din plan. Estimér hvor meget energi hver aktivitet bruger, og luk dagen når du er færdig. Din data gemmes automatisk.',
+        title: 'You\'re ready! 🚀',
+        subtitle: 'Start your first day',
+        description: 'Start by adding activities to your plan. Estimate how much energy each activity uses, and close the day when you\'re done. Your data is saved automatically.',
         icon: <CheckCircle2 className="w-12 h-12" />,
       },
     ];
@@ -767,7 +767,7 @@ export default function App() {
             onClick={handleNextOnboardingStep}
             className="w-full py-4 bg-gradient-to-r from-pastel-mint to-pastel-lavender text-white rounded-2xl font-bold shadow-lg shadow-pastel-mint/20 hover:shadow-lg transition-all"
           >
-            {onboardingStep === 4 ? 'Kom i gang' : 'Næste'}
+            {onboardingStep === 4 ? 'Get started' : 'Next'}
           </button>
         </motion.div>
       </motion.div>
@@ -910,7 +910,7 @@ export default function App() {
         if (cancelled) return;
 
         setActivitySuggestion(null);
-        setActivitySuggestionError('Kunne ikke hente forslag fra databasen.');
+        setActivitySuggestionError('Could not retrieve suggestions from the database.');
         console.error('Failed to load activity suggestion', error);
       } finally {
         if (!cancelled) {
@@ -964,7 +964,7 @@ export default function App() {
       setShowActivityNameSuggestions(false);
       setRecoveryAutocompleteError('');
       if (import.meta.env.DEV && searchText.length > 0) {
-        setAutocompleteDebugText('Skriv mindst 2 tegn for autocomplete.');
+        setAutocompleteDebugText('Type at least 2 characters for autocomplete.');
       } else {
         setAutocompleteDebugText('');
       }
@@ -1017,16 +1017,16 @@ export default function App() {
             setShowActivityNameSuggestions(fallbackResults.length > 0);
             setRecoveryAutocompleteError(
               fallbackResults.length > 0
-                ? 'AI quota ramt. Viser lokale forslag i stedet.'
-                : 'AI quota ramt, og ingen lokale forslag matchede input.'
+                ? 'AI quota reached. Showing local suggestions instead.'
+                : 'AI quota reached, and no local suggestions matched your input.'
             );
           } else {
             setActivityNameSuggestions([]);
             setShowActivityNameSuggestions(false);
             if (message === 'NO_API_KEY') {
-              setRecoveryAutocompleteError('OpenAI API-nøgle mangler i .env.local (VITE_OPENAI_API_KEY).');
+              setRecoveryAutocompleteError('OpenAI API key missing in .env.local (VITE_OPENAI_API_KEY).');
             } else {
-              setRecoveryAutocompleteError('Kunne ikke hente AI-forslag lige nu. Prøv igen.');
+              setRecoveryAutocompleteError('Could not retrieve AI suggestions right now. Please try again.');
             }
           }
 
@@ -1091,10 +1091,10 @@ export default function App() {
 
     try {
       const activities = await getActivities();
-      setFirestoreTestMessage(`Firestore OK: hentede ${activities.length} aktiviteter.`);
+    setFirestoreTestMessage(`Firestore OK: loaded ${activities.length} activities.`);
     } catch (error) {
       console.error('Manual Firestore test failed', error);
-      setFirestoreTestMessage('Firestore-fejl: kunne ikke hente aktiviteter. Se konsollen for detaljer.');
+      setFirestoreTestMessage('Firestore error: could not load activities. See console for details.');
     } finally {
       setIsTestingFirestore(false);
     }
@@ -1373,7 +1373,7 @@ export default function App() {
                   onDragStart={() => setDragSource('selected')}
                   onClick={moveOneSpoonBack}
                   className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm active:scale-95 transition-all ${isRecovery ? 'bg-pastel-green' : 'bg-pastel-mint'}`}
-                  aria-label="Fjern en ske"
+                  aria-label="Remove a spoon"
                 >
                   <SpoonIcon className="w-4 h-4" />
                 </button>
@@ -1387,7 +1387,7 @@ export default function App() {
             className="bg-white border border-gray-100 rounded-2xl p-4"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tilgaengelige skeer</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Available spoons</span>
               <span className="text-sm font-bold text-gray-500">{availableCount}</span>
             </div>
             <div className="flex flex-wrap gap-2 min-h-[40px]">
@@ -1399,7 +1399,7 @@ export default function App() {
                   onDragStart={() => setDragSource('available')}
                   onClick={moveOneSpoonToSelected}
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all"
-                  aria-label="Tilfoej en ske"
+                  aria-label="Add a spoon"
                 >
                   <SpoonIcon className="w-4 h-4" />
                 </button>
@@ -1488,12 +1488,12 @@ export default function App() {
               <h1 className="text-xl font-bold tracking-tight text-[#2D3436]">Spoonie Learning</h1>
               <div className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
-                <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Niveau {energyLevel.level}: {energyLevel.title}</span>
+                <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Level {energyLevel.level}: {energyLevel.title}</span>
               </div>
               <button
                 onClick={() => setShowXpLevelsModal(true)}
                 className="mt-1 inline-flex items-center gap-1 rounded-full bg-pastel-peach/20 px-2 py-0.5 hover:bg-pastel-peach/30 transition-colors"
-                aria-label="Vis XP unlocks"
+                aria-label="View XP levels"
               >
                 <Sparkles className="w-3 h-3 text-pastel-peach" />
                 <span className="text-[10px] font-bold text-pastel-peach uppercase tracking-wider">{totalXP} XP</span>
@@ -1563,7 +1563,7 @@ export default function App() {
                 <div className="space-y-1">
                   <p className="text-gray-400 text-sm font-medium uppercase tracking-widest">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                   <h2 className="text-3xl font-black text-[#2D3436]">{getGreeting()}</h2>
-                  <p className="text-sm text-gray-500 font-medium">Din energi-lab: træn estimater, byg streaks, og lås rewards op.</p>
+                  <p className="text-sm text-gray-500 font-medium">Your energy lab: train estimates, build streaks, and unlock rewards.</p>
                 </div>
 
                 <button
@@ -1574,7 +1574,7 @@ export default function App() {
                     {renderFullBodyAvatar('small')}
                     <div className="text-left">
                       <p className="text-sm font-bold text-gray-800">Avatar Studio</p>
-                      <p className="text-xs text-gray-500">Aendre din avatar direkte herfra</p>
+                      <p className="text-xs text-gray-500">Customise your avatar right here</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-300" />
@@ -1584,7 +1584,7 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Learning Journey</p>
-                      <h3 className="text-lg font-black text-[#2D3436]">Level op gennem vaner</h3>
+                      <h3 className="text-lg font-black text-[#2D3436]">Level up through habits</h3>
                     </div>
                     <TrendingUp className="w-5 h-5 text-pastel-lavender" />
                   </div>
@@ -1602,7 +1602,7 @@ export default function App() {
                       <p className="text-xl font-black text-pastel-mint">{totalXP}</p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600">Dagens mission: hold balancen og afslut mindst 1 recovery-aktivitet.</p>
+                  <p className="text-xs text-gray-600">Today's mission: stay balanced and complete at least 1 recovery activity.</p>
                 </section>
 
                 {/* Spoon Indicator */}
@@ -1681,7 +1681,7 @@ export default function App() {
                         {dayState.activities.filter(a => a.completed).length}/{dayState.activities.length} Done
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag aktiviteter for at aendre raekkefolgen.</p>
+                    <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag activities to reorder.</p>
                     <div className="space-y-3">
                       {dayState.activities.map((act) => (
                         <div
@@ -1712,7 +1712,7 @@ export default function App() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
-                            <div className="p-1 text-gray-300 cursor-grab active:cursor-grabbing" title="Drag for at flytte">
+                            <div className="p-1 text-gray-300 cursor-grab active:cursor-grabbing" title="Drag to move">
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <circle cx="9" cy="6" r="1.2" />
                                 <circle cx="15" cy="6" r="1.2" />
@@ -1762,7 +1762,7 @@ export default function App() {
                       <Plus className="w-4 h-4" /> Add activity
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
+                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag cards to reorder.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {suggestedActivities.map((act, i) => (
                       <div
@@ -1824,7 +1824,7 @@ export default function App() {
                       <Plus className="w-4 h-4" /> Add Recovery
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag kort for at aendre raekkefolgen.</p>
+                  <p className="text-[11px] text-gray-400 font-semibold mb-3">Drag cards to reorder.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {recoveryActivities.map((act, i) => (
                       <div
@@ -1941,16 +1941,16 @@ export default function App() {
                     {(showActivityNameSuggestions || isLoadingActivityNameSuggestions) && (
                       <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-2 space-y-1">
                         {isLoadingActivityNameSuggestions && (
-                          <p className="px-3 py-2 text-xs text-gray-500">Finder forslag...</p>
+                          <p className="px-3 py-2 text-xs text-gray-500">Finding suggestions...</p>
                         )}
 
                         {!isLoadingActivityNameSuggestions && activityNameSuggestions.length === 0 && customName.trim().length >= 2 && (
                           <p className="px-3 py-2 text-xs text-gray-500">
                             {customCategory === 'recovery'
-                              ? (recoveryAutocompleteError || 'Ingen AI recovery-forslag fundet endnu.')
+                              ? (recoveryAutocompleteError || 'No AI recovery suggestions found yet.')
                               : (import.meta.env.VITE_FIREBASE_PROJECT_ID
-                                ? 'Ingen forslag fundet endnu.'
-                                : 'Firebase mangler config. Opret .env.local med VITE_FIREBASE_* variabler.')}
+                                ? 'No suggestions found yet.'
+                                : 'Firebase config missing. Create .env.local with VITE_FIREBASE_* variables.')}
                           </p>
                         )}
 
@@ -2169,13 +2169,13 @@ export default function App() {
                       className="space-y-3"
                     >
                       {currentActivity?.category !== 'recovery' && isLoadingActivitySuggestion && (
-                        <p className="text-xs text-center text-gray-500">Finder forslag fra database...</p>
+                        <p className="text-xs text-center text-gray-500">Looking up database suggestion...</p>
                       )}
                       {!isLoadingActivitySuggestion && activitySuggestion && (
                         <p className="text-xs text-center text-gray-600">
                           {currentActivity?.category === 'recovery'
-                            ? `Recovery-forslag: ${suggestedEstimate} spoons`
-                            : `Forslag: ${suggestedEstimate} spoons (MET: ${activitySuggestion.met.toFixed(1)})`}
+                            ? `Recovery suggestion: ${suggestedEstimate} spoons`
+                            : `Suggestion: ${suggestedEstimate} spoons (MET: ${activitySuggestion.met.toFixed(1)})`}
                         </p>
                       )}
                       {currentActivity?.category !== 'recovery' && !!activitySuggestionError && (
@@ -2218,7 +2218,7 @@ export default function App() {
                 </AnimatePresence>
 
                 <p className="text-center text-xs text-gray-400 px-8">
-                  Hvert estimat giver dig mere præcision i dit energi-budget over tid.
+                  Each estimate gives you more precision in your energy budget over time.
                 </p>
               </motion.div>
             )}
@@ -2284,14 +2284,14 @@ export default function App() {
                 <div className="p-6 rounded-3xl border border-pastel-lavender/40 bg-white shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-bold text-lg">Energi-kompetence</h3>
-                      <p className="text-xs font-semibold text-gray-500">Niveau {energyLevel.level}: {energyLevel.title}</p>
+                      <h3 className="font-bold text-lg">Energy Skills</h3>
+                      <p className="text-xs font-semibold text-gray-500">Level {energyLevel.level}: {energyLevel.title}</p>
                     </div>
                     <TrendingUp className="w-5 h-5 text-pastel-lavender" />
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-pastel-lavender">{progressionScore}</span>
-                    <span className="text-sm font-semibold text-gray-600">progressionspoint</span>
+                    <span className="text-sm font-semibold text-gray-600">progression points</span>
                   </div>
                   <div className="mt-4 space-y-2">
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -2299,10 +2299,10 @@ export default function App() {
                     </div>
                     <p className="text-xs text-gray-600">
                       {nextEnergyLevel
-                        ? `${scoreToNextLevel} point til niveau ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
-                        : 'Du har nået højeste niveau i energi-kompetence.'}
+                        ? `${scoreToNextLevel} points to level ${nextEnergyLevel.level}: ${nextEnergyLevel.title}`
+                        : 'You have reached the highest energy skill level.'}
                     </p>
-                    <p className="text-xs text-gray-500">Point = stabil streak + rewards. XP bruges kun til avatar unlocks.</p>
+                    <p className="text-xs text-gray-500">Points = stable streak + rewards. XP is used only for avatar unlocks.</p>
                   </div>
                 </div>
 
@@ -2346,7 +2346,7 @@ export default function App() {
                       </div>
                     </div>
                     <p className="text-sm text-gray-500 leading-relaxed">
-                      Alle temaer er altid tilgaengelige, sa brugeren kan vaelge det mest behagelige.
+                      All themes are always available so you can choose what feels most comfortable.
                     </p>
                     <div className="space-y-2">
                       {UI_THEMES.map(theme => {
@@ -2438,12 +2438,12 @@ export default function App() {
                       </button>
                     </div>
                     <p className="text-sm text-gray-500 leading-relaxed">
-                      Få en blid påmindelse om at tage en pause, når dine spoons bliver lave.
+                      Get a gentle reminder to take a break when your spoons get low.
                     </p>
                     {breakReminderEnabled && (
                       <div className="pt-2 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700">Påmind mig ved</span>
+                          <span className="text-sm font-medium text-gray-700">Remind me at</span>
                           <span className="text-sm font-bold text-pastel-mint">{breakReminderThreshold} spoons</span>
                         </div>
                         <input 
@@ -2477,7 +2477,7 @@ export default function App() {
                       </button>
                     </div>
                     <p className="text-sm text-gray-500 leading-relaxed">
-                      Når Sick Mode er aktiv, koster alle energi-krævende aktiviteter dobbelt antal spoons.
+                      When Sick Mode is active, all energy-intensive activities cost double spoons.
                     </p>
                   </div>
 
@@ -2554,14 +2554,14 @@ export default function App() {
                         <h4 className="font-bold">Dev: Firestore Test</h4>
                       </div>
                       <p className="text-sm text-gray-500 leading-relaxed">
-                        Knap til hurtig test af database-forbindelsen og antal aktiviteter.
+                        Button for quick testing of the database connection and activity count.
                       </p>
                       <button
                         onClick={handleManualFirestoreTest}
                         disabled={isTestingFirestore}
                         className="w-full py-3 bg-pastel-mint text-white rounded-2xl font-bold hover:bg-pastel-mint/80 transition-all disabled:opacity-60"
                       >
-                        {isTestingFirestore ? 'Tester...' : 'Test Firestore'}
+                        {isTestingFirestore ? 'Testing...' : 'Test Firestore'}
                       </button>
                       {!!firestoreTestMessage && (
                         <p className="text-xs text-gray-600">{firestoreTestMessage}</p>
@@ -2599,19 +2599,19 @@ export default function App() {
 
                 <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-5">
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Dress up din avatar med hud, har, toj og accessories. Flere dele låses op, når du samler XP.
+                    Dress up your avatar with skin, hair, clothes and accessories. More parts unlock as you earn XP.
                   </p>
 
                   <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
                     {renderFullBodyAvatar('large')}
                     <div>
-                      <p className="text-sm font-bold text-gray-800">Din avatar</p>
-                      <p className="text-xs text-gray-500">XP Tier {avatarXpLevel.level}: {avatarXpLevel.title}</p>
+                      <p className="text-sm font-bold text-gray-800">Your avatar</p>
+                      <p className="text-xs text-gray-500">XP level {avatarXpLevel.level}: {avatarXpLevel.title}</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hudtone</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Skin tone</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_SKINS.map(option => {
                         const unlocked = option.unlockLevel <= avatarXpLevel.level;
@@ -2632,7 +2632,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2641,7 +2641,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Har</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hair</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_HAIRS.map(option => {
                         const unlocked = option.unlockLevel <= avatarXpLevel.level;
@@ -2662,7 +2662,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2671,7 +2671,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Overdel</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Top</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_TOPS.map(option => {
                         const unlocked = option.unlockLevel <= avatarXpLevel.level;
@@ -2692,7 +2692,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2701,7 +2701,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Underdel</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bottom</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_BOTTOMS.map(option => {
                         const unlocked = option.unlockLevel <= avatarXpLevel.level;
@@ -2722,7 +2722,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2752,7 +2752,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -2761,7 +2761,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Baggrund</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Background</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {AVATAR_FRAMES.map(option => {
                         const unlocked = option.unlockLevel <= avatarXpLevel.level;
@@ -2782,7 +2782,7 @@ export default function App() {
                               <span className="text-sm font-semibold text-gray-800">{option.label}</span>
                             </div>
                             {!unlocked && (
-                              <p className="text-[10px] text-gray-500 mt-1">Låses op ved {xpForAvatarUnlock(option.unlockLevel)} XP</p>
+                              <p className="text-[10px] text-gray-500 mt-1">Unlocks at {xpForAvatarUnlock(option.unlockLevel)} XP</p>
                             )}
                           </button>
                         );
@@ -3135,7 +3135,7 @@ export default function App() {
           {showOnboardingModal && renderOnboardingModal()}
         </AnimatePresence>
 
-        {/* XP Unlocks Modal */}
+        {/* XP Levels Modal */}
         <AnimatePresence>
           {showXpLevelsModal && (
             <motion.div
@@ -3154,20 +3154,20 @@ export default function App() {
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-black">XP Unlocks</h3>
-                    <p className="text-xs text-gray-500">Se hvornår avatar tiers låses op</p>
+                    <h3 className="text-2xl font-black">XP levels</h3>
+                    <p className="text-xs text-gray-500">See when avatar levels unlock</p>
                   </div>
                   <button
                     onClick={() => setShowXpLevelsModal(false)}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label="Luk XP unlocks"
+                    aria-label="Close XP levels"
                   >
                     <X className="w-5 h-5 text-gray-500" />
                   </button>
                 </div>
 
                 <div className="rounded-2xl bg-pastel-peach/10 p-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Din nuvaerende XP</span>
+                  <span className="text-sm font-semibold text-gray-700">Your current XP</span>
                   <span className="text-sm font-black text-pastel-peach">{totalXP} XP</span>
                 </div>
 
@@ -3188,15 +3188,15 @@ export default function App() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-[#2D3436]">Avatar Tier {level.level}: {level.title}</p>
+                          <p className="text-sm font-bold text-[#2D3436]">Avatar level {level.level}: {level.title}</p>
                           <span className="text-xs font-black text-gray-500">{level.minXP} XP</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
                           {isCurrent
-                            ? 'Dit nuvaerende avatar tier'
+                            ? 'Your current avatar level'
                             : isUnlocked
                               ? 'Unlocked'
-                              : `Mangler ${Math.max(0, level.minXP - totalXP)} XP`}
+                              : `Missing ${Math.max(0, level.minXP - totalXP)} XP`}
                         </p>
                       </div>
                     );
@@ -3291,11 +3291,11 @@ export default function App() {
                   <div className="bg-pastel-green/20 p-4 rounded-2xl space-y-3 border border-pastel-green/40">
                     <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Recovery Insight</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-800">Recovery-forslag</span>
+                      <span className="text-sm text-gray-800">Recovery suggestion</span>
                       <span className="font-bold text-pastel-green">{suggestedEstimate} Spoons</span>
                     </div>
                     <p className="text-[11px] text-gray-600 leading-tight">
-                      Forslaget er baseret paa recovery-ord i din aktivitet og tidligere recovery-forslag.
+                      The suggestion is based on recovery-related words in your activity and previous recovery suggestions.
                     </p>
                   </div>
                 ) : (
@@ -3456,9 +3456,9 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black">Tid til en pause?</h3>
+                  <h3 className="text-2xl font-black">Time for a break?</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
-                    Dine spoons er ved at være lave. En kort pause nu kan hjælpe dig med at bevare energi til senere!
+                    Your spoons are getting low. A short break now can help you preserve energy for later!
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
@@ -3470,7 +3470,7 @@ export default function App() {
                     }}
                     className="w-full py-4 bg-pastel-mint text-white rounded-2xl font-bold shadow-lg shadow-pastel-mint/20 hover:bg-pastel-mint/80 transition-all flex items-center justify-center gap-2"
                   >
-                    <Coffee className="w-5 h-5" /> Tag en pause
+                    <Coffee className="w-5 h-5" /> Take a break
                   </button>
                   <button 
                     onClick={() => {
@@ -3479,7 +3479,7 @@ export default function App() {
                     }}
                     className="w-full py-4 bg-gray-50 text-gray-600 rounded-2xl font-bold hover:bg-gray-100 transition-all"
                   >
-                    Jeg hviler senere
+                    I'll rest later
                   </button>
                 </div>
                 

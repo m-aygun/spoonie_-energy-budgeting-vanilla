@@ -135,8 +135,8 @@ const getCachedActivities = async (): Promise<FirestoreActivityRecord[]> => {
       docsLoaded: 0,
       matchesFound: 0,
       reason: hasFirebaseConfig
-        ? 'Firestore instance ikke initialiseret.'
-        : 'Firebase config mangler (opret .env.local med VITE_FIREBASE_*).',
+        ? 'Firestore instance not initialized.'
+        : 'Firebase config missing (create .env.local with VITE_FIREBASE_*).',
     };
     return [];
   }
@@ -174,8 +174,8 @@ const getCachedActivities = async (): Promise<FirestoreActivityRecord[]> => {
       reason: permissionError
         ? 'Firestore permission denied: opdater regler for laeseadgang.'
         : collectionErrors.length > 0
-          ? `Ingen docs hentet. Fejl: ${collectionErrors.join(' | ')}`
-          : 'Ingen docs i collections activities/activity/Activities.',
+          ? `No docs loaded. Error: ${collectionErrors.join(' | ')}`
+          : 'No docs in collections activities/activity/Activities.',
     };
   }
 
@@ -224,7 +224,7 @@ export const searchActivitySuggestions = async (
       query: rawInput,
       docsLoaded: 0,
       matchesFound: 0,
-      reason: lastAutocompleteDebug.reason || 'Ingen records blev hentet fra Firestore.',
+      reason: lastAutocompleteDebug.reason || 'No records were loaded from Firestore.',
     };
     return [];
   }
@@ -249,7 +249,7 @@ export const searchActivitySuggestions = async (
     query: rawInput,
     docsLoaded: records.length,
     matchesFound: matches.length,
-    reason: matches.length === 0 ? 'Data hentet, men ingen match paa denne tekst.' : '',
+    reason: matches.length === 0 ? 'Data loaded, but no match for this text.' : '',
   };
 
   return matches.map(record => {

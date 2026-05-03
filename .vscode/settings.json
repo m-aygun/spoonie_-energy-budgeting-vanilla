@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "Set-Content": true,
+        "/^node node_modules/vite/bin/vite\\.js --port 3000$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

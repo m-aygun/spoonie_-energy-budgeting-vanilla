@@ -1,4 +1,4 @@
-import type { DayState } from './types';
+﻿import type { DayState } from './types';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
@@ -72,7 +72,7 @@ export function fallbackRecoverySuggestionsFromInput(
 
 const summarizeHistory = (history: DayState[]) => {
   if (history.length === 0) {
-    return 'Ingen historik endnu.';
+    return 'No history yet.';
   }
 
   return history
@@ -83,7 +83,7 @@ const summarizeHistory = (history: DayState[]) => {
         .map(activity => `${activity.name} (+${activity.estimatedSpoons || 0})`)
         .join(', ');
 
-      return `${day.date}: remaining=${day.remainingSpoons ?? 'ukendt'}, recovery=[${recoveryDone || 'ingen'}]`;
+      return `${day.date}: remaining=${day.remainingSpoons ?? 'unknown'}, recovery=[${recoveryDone || 'none'}]`;
     })
     .join('\n');
 };
@@ -113,26 +113,26 @@ export async function generateRecoveryActivitySuggestions(
   }
 
   const historySummary = summarizeHistory(history);
-  const existing = existingNames.join(', ') || 'ingen';
+  const existing = existingNames.join(', ') || 'none';
 
   const systemPrompt = [
-    'Du er en empatisk energi-coach i en Spoonie app.',
-    'Foreslå recovery-aktiviteter som hjælper brugeren med at få energi tilbage.',
-    'Returnér KUN gyldig JSON uden markdown.',
-    'Brug formatet: {"suggestions":[{"name":"...","suggestedSpoons":2,"reason":"..."}]}.',
-    'suggestedSpoons skal være heltal mellem 1 og 5.',
-    'Aktiviteter må ikke være dubletter af eksisterende navne.',
-    `Returnér præcis ${count} forslag.`,
+    'You are an empathetic energy coach in a Spoonie app.',
+    'Suggest recovery activities that help the user regain energy.',
+    'Return ONLY valid JSON without markdown.',
+    'Use the format: {"suggestions":[{"name":"...","suggestedSpoons":2,"reason":"..."}]}.',
+    'suggestedSpoons must be an integer between 1 and 5.',
+    'Activities must not duplicate existing names.',
+    `Return exactly ${count} suggestions.`,
   ].join(' ');
 
   const userPrompt = [
-    'Eksisterende recovery-forslag:',
+    'Existing recovery suggestions:',
     existing,
     '',
-    'Brugerens historik (seneste dage):',
+    "User's history (recent days):",
     historySummary,
     '',
-    'Foreslå nye recovery-aktiviteter på dansk og et realistisk spoon-gain.',
+    'Suggest new recovery activities in English with a realistic spoon-gain.',
   ].join('\n');
 
   const response = await fetch(OPENAI_API_URL, {
@@ -208,28 +208,28 @@ export async function suggestRecoveryFromInput(
   }
 
   const historySummary = summarizeHistory(history);
-  const existing = existingNames.join(', ') || 'ingen';
+  const existing = existingNames.join(', ') || 'none';
 
   const systemPrompt = [
-    'Du er en empatisk energi-coach i en Spoonie app.',
-    'Brug brugerens tekstinput til at foreslå recovery-aktiviteter, der matcher intentionen.',
-    'Returnér KUN gyldig JSON uden markdown.',
-    'Brug formatet: {"suggestions":[{"name":"...","suggestedSpoons":2,"reason":"..."}]}.',
-    'suggestedSpoons skal være heltal mellem 1 og 5.',
-    'Aktiviteter må ikke være dubletter af eksisterende navne.',
-    `Returnér præcis ${count} forslag.`,
+    'You are an empathetic energy coach in a Spoonie app.',
+    "Use the user's text input to suggest recovery activities that match their intent.",
+    'Return ONLY valid JSON without markdown.',
+    'Use the format: {"suggestions":[{"name":"...","suggestedSpoons":2,"reason":"..."}]}.',
+    'suggestedSpoons must be an integer between 1 and 5.',
+    'Activities must not duplicate existing names.',
+    `Return exactly ${count} suggestions.`,
   ].join(' ');
 
   const userPrompt = [
-    `Brugerens input: "${query}"`,
+    `User input: "${query}"`,
     '',
-    'Eksisterende recovery-forslag:',
+    'Existing recovery suggestions:',
     existing,
     '',
-    'Brugerens historik (seneste dage):',
+    "User's history (recent days):",
     historySummary,
     '',
-    'Foreslå recovery-aktiviteter på dansk der matcher inputtet, og angiv realistisk spoon-gain.',
+    'Suggest recovery activities in English that match the input, with a realistic spoon-gain.',
   ].join('\n');
 
   const response = await fetch(OPENAI_API_URL, {
