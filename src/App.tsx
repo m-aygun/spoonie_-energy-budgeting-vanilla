@@ -1481,12 +1481,17 @@ export default function App() {
     <div className={`theme-${activeTheme.id} min-h-screen sm:p-4 font-sans selection:bg-pastel-mint selection:text-white bg-[#F8F9FA] text-[#2D3436]`}>
       <div className="w-full max-w-md sm:max-w-3xl lg:max-w-5xl mx-auto min-h-screen sm:min-h-[calc(100vh-2rem)] sm:rounded-[28px] shadow-xl relative overflow-hidden flex flex-col bg-white">
         
+        {/* Logo Banner */}
+        <div className="w-full flex justify-center items-center py-6 px-4" style={{background: 'linear-gradient(135deg, #eaf6fb 0%, #f0f9f0 100%)'}}>
+          <img src={spoonieLogoUrl} alt="Spoonie – Energy & Self-Care" className="h-28 sm:h-36 w-auto drop-shadow-md" />
+        </div>
+
         {/* Header */}
-        <header className="px-4 sm:px-6 lg:px-8 pt-8 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
+        <header className="px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-[#b8dced]/40">
           <div className="flex items-center gap-2">
             {renderFullBodyAvatar('small')}
             <div>
-              <img src={spoonieLogoUrl} alt="Spoonie" className="h-10 w-auto" />
+              <span className="text-base font-bold tracking-tight text-[#2D3436]">Spoonie</span>
               <div className="flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-pastel-lavender" />
                 <span className="text-[10px] font-bold text-pastel-lavender uppercase tracking-wider">Level {energyLevel.level}: {energyLevel.title}</span>
